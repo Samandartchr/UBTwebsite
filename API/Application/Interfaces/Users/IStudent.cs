@@ -13,11 +13,11 @@ public interface IStudentWriter
 
 public interface IStudentReader
 {
-    Task<bool> IsInGroupAsync(string studentId, string groupId);
-    Task<List<string>> GetGroupInvitesAsync(string studentId);
+    Task<bool> IsInGroupAsync(string studentId, string groupId); //firebase function
+    Task<List<GroupPublic>> GetGroupInvitesAsync(string studentId);
 
     Task<Test> GetTestAsync(string studentId, Subject SecondarySubject1, Subject SecondarySubject2);
-    Task<List<TestResult>> GetTestResultsAsync(string studentId);
+    Task<List<TestResultClient>> GetTestResultsAsync(string studentId);
     Task<TestAnswers> GetTestAnswersAsync(string studentId, Test test);
     Task<List<GroupPublic>> GetGroups(string studentId);
 
@@ -27,7 +27,7 @@ public interface IStudentReader
 
 public interface IStudentCalculator
 {
-    Task<TestAnswers> GetStudentAnswersAsync(string studentId, Test test);
+    Task<TestAnswers> GetStudentAnswersAsync(string studentId, Test test);//firebase function
     Task<TestResult> CalculateTestResultAsync(string studentId, 
                                             TestAnswers studentAnswers, 
                                             TestAnswers testAnswers, 

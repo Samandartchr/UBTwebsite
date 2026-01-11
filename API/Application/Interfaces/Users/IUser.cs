@@ -7,7 +7,7 @@ public interface IUserReader
 {
     Task<bool> isUsernameExist(string nickname);
     Task<UserPublicInfo> GetUserPublicInfoAsync(string username);
-    Task<string> GetIdAsync(string token);
+    Task<string> GetIdAsync(string token); //firebase
     Task<string> GetUsernameAsync(string userId);
     Task<string> GetIdByUsernameAsync(string username);
 }

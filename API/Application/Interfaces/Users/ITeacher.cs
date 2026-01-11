@@ -15,7 +15,7 @@ public interface ITeacherWriter
 
     Task InviteStudentToGroupAsync(string teacherId, string groupId, string studentId);
     Task AcceptStudentToGroupAsync(string teacherId, string groupId, string studentId);
-    Task RemoveStudentFromGroupAsync(string teacherId, string groupId, string studentId);
+    Task RemoveStudentFromGroupAsync(string teacherId, string groupId, string studentId);//firebase
     
     Task CreateGroup(Group group);
 }

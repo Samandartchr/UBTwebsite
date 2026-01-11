@@ -33,7 +33,6 @@ public static class TestValidator
     {
         if (test.SingleChoiceQuestions.Count != 25) {return false;}
         else if (test.MultipleChoiceQuestions.Count != 5) {return false;}
-        else if (test.ContextQuestions.Count != 1) {return false;}
         else if (test.MatchQuestions.Count != 5) {return false;}
         return true;
     }
