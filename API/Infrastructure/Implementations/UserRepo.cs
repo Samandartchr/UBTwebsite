@@ -1,37 +1,48 @@
 using API.Application.Interfaces.Users.IUser;
-using API.Infrastructure.Persistence.SQLdatabase.SQLite.AppDbContext;
+using API.Infrastructure.Database;
 using API.Domain.Entities.User;
 using API.Domain.Entities.Settings;
 using API.Domain.Enums.UserRole;
-using System;
-
-namespace API.Infrastructure.Persistence.SQLdatabase.SQLite.UserRepo;
+using FirebaseAdmin;
+using Google.Cloud.Firestore;
+using FirebaseAdmin.Auth;
+using Microsoft.EntityFrameworkCore;
+namespace API.Infrastructure.Implementations.UserRepository;
 
 public class UserRepo: IUserReader, IUserWriter
 {
     private readonly AppDbContext _context;
-    public UserRepo(AppDbContext context)
+    private readonly FirestoreDb _db;
+    private readonly FirebaseAuth _auth;
+    public UserRepo(AppDbContext context, FirestoreDb db, FirebaseAuth auth)
     {
         _context = context;
+        _db = db;
+        _auth = auth;
     }
 
     //Reader methods
+    public async Task<string> GetIdAsync(string token)
+    {
+        FirebaseToken decodedToken = await _auth.VerifyIdTokenAsync(token);
+        return decodedToken.Uid;
+    }
     public async Task<bool> isUsernameExist(string nickname)
     {
         bool exists;
-        exists = await _context.Users.AnyAsync(u => u.Username == nickname);
+        exists = await _context.Users.AnyAsync(user => user.Username == nickname);
         return exists;
     }
     public async Task<UserPublicInfo> GetUserPublicInfoAsync(string username)
     {
-        User user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        User? user = await _context.Users.FirstOrDefaultAsync(user => user.Username == username);
         if (user == null) throw new Exception("User not found");
 
         return new UserPublicInfo
         {
             Username = user.Username,
             Email = user.Email,
-            Role = Enum.Parse<UserRole>(user.Role),
+            Role = user.Role,
             Name = user.Name,
             Surname = user.Surname,
             CreatedAt = user.CreatedAt,
@@ -61,7 +72,7 @@ public class UserRepo: IUserReader, IUserWriter
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            Role = user.Role.ToString(),
+            Role = user.Role,
             Name = user.Name,
             Surname = user.Surname,
             CreatedAt = user.CreatedAt,

@@ -1,9 +1,9 @@
-using API.Infrastructure.Persistence.SQLdatabase.SQLite.AppDbContext;
+using API.Infrastructure.Database;
 using API.Application.Interfaces.Users.ITeacher;
 using API.Domain.Enums.UserRole;
 using API.Domain.Entities.User;
 
-namespace API.Infrastructure.Persistence.SQLdatabase.SQLite.TeacherRepo;
+namespace API.Infrastructure.Implementations.TeacherRepository;
 
 public class TeacherRepo: ITeacherReader, ITeacherWriter
 {

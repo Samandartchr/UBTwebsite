@@ -1,8 +1,8 @@
 using API.Domain.Entities.User;
 using API.Application.Interfaces.Users.IGroup;
-using API.Infrastructure.Persistence.SQLdatabase.SQLite.AppDbContext;
+using API.Infrastructure.Database;
 
-namespace API.Infrastructure.Persistence.SQLdatabase.SQLite.GroupRepo;
+namespace API.Infrastructure.Implementations.GroupRepository;
 
 public class GroupRepo: IGroupReader, IGroupWriter
 {

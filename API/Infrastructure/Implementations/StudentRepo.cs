@@ -1,8 +1,13 @@
 using API.Domain.Entities.User;
 using API.Domain.Entities.Test;
 using API.Domain.Enums.UserRole;
+using API.Application.Interfaces.Users.IStudent;
+using API.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using API.Domain.Entities;
+using API.Domain.Enums.Subject;
 
-namespace API.Infrastructure.Persistence.SQLdatabase.SQLite.StudentRepo;
+namespace API.Infrastructure.Implementations.StudentRepository;
 
 public class StudentRepo: IStudentReader, IStudentWriter
 {
@@ -13,14 +18,28 @@ public class StudentRepo: IStudentReader, IStudentWriter
     }
 
     //Reader methods
-    public async Task<List<string>> GetGroupInvitesAsync(string studentId)
+    public async Task<List<GroupPublic>> GetGroupInvitesAsync(string studentId)
     {
         List<string> invites = new List<string>();
         invites = await _context.GroupJoinOrders
                     .Where(gi => gi.AcceptorId == studentId)
                     .Select(gi => gi.GroupId)
                     .ToListAsync();
-        return invites;
+        List<GroupPublic> groupInvites = new List<GroupPublic>();
+        foreach (var groupId in invites)
+        {
+            var group = await _context.Groups.FindAsync(groupId);
+            groupInvites.Add(new GroupPublic
+            {
+                GroupId = group.GroupId,
+                GroupName = group.GroupName,
+                CreatedAt = group.CreatedAt,
+                GroupDescription = group.GroupDescription,
+                GroupImageLink = group.GroupImageLink,
+                TeacherUsername = group.TeacherUsername
+            });
+        }
+        return groupInvites;
     }
 
     public async Task<List<TestResultClient>> GetTestResultsAsync(string studentId)
@@ -196,9 +215,6 @@ public class StudentCalculator: IStudentCalculator
                                             Subject SecondarySubject1, 
                                             Subject SecondarySubject2)
     {
-        TestResult result = new TestResult();
-        result.StudentId = studentId;
-        result.TakenAt = DateTime.UtcNow;
         //Calculation logic: Compare booleans and assign scores
         //Kazakh History
         int kazakhHistoryScore = 20;
@@ -226,7 +242,6 @@ public class StudentCalculator: IStudentCalculator
                 }
             }
         }
-        result.KazakhHistoryScore = kazakhHistoryScore;
 
         //Functional Literacy
         int functionalScore = 10;
@@ -243,7 +258,6 @@ public class StudentCalculator: IStudentCalculator
                 }
             }
         }
-        result.FunctionalLiteracyScore = functionalScore;
 
         //Mathematical Literacy
         int mathLitScore = 10;
@@ -257,7 +271,6 @@ public class StudentCalculator: IStudentCalculator
                 }
             }
         }
-        result.MathematicalLiteracyScore = mathLitScore;
 
         //Secondary Subject 1
         int sec1Score = 50;
@@ -307,8 +320,6 @@ public class StudentCalculator: IStudentCalculator
                 }
             }
         }
-        result.SecondarySubject1 = SecondarySubject1;
-        result.SecondarySubject1Score = sec1Score;
 
         //Secondary Subject 2
         int sec2Score = 50;
@@ -358,10 +369,20 @@ public class StudentCalculator: IStudentCalculator
                 }
             }
         }
-        result.SecondarySubject2 = SecondarySubject2;
-        result.SecondarySubject2Score = sec2Score;
 
-        result.TotalScore = kazakhHistoryScore + functionalScore + mathLitScore + sec1Score + sec2Score;
+        TestResult result = new TestResult
+        {
+            StudentId = studentId,
+            TakenAt = DateTime.UtcNow,
+            KazakhHistoryScore = kazakhHistoryScore,
+            FunctionalLiteracyScore = functionalScore,
+            MathematicalLiteracyScore = mathLitScore,
+            SecondarySubject1 = SecondarySubject1,
+            SecondarySubject1Score = sec1Score,
+            SecondarySubject2 = SecondarySubject2,
+            SecondarySubject2Score = sec2Score,
+            TotalScore = kazakhHistoryScore + functionalScore + mathLitScore + sec1Score + sec2Score
+        };
         return result;
     }
 }

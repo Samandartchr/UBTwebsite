@@ -44,13 +44,29 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "FirebaseAdmin": {
+              "target": "Package",
+              "version": "[3.4.0, )"
+            },
+            "Google.Cloud.Firestore": {
+              "target": "Package",
+              "version": "[4.1.0, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.3, )"
             },
-            "Microsoft.Data.Sqlite": {
+            "Microsoft.Data.Sqlite.Core": {
               "target": "Package",
-              "version": "[10.0.1, )"
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.10, )"
             }
           },
           "imports": [

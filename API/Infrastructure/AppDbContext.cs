@@ -3,7 +3,7 @@ using API.Domain.Entities;
 using API.Domain.Entities.User;
 using API.Domain.Entities.Test;
 
-namespace API.Infrastructure.Persistence.SQLdatabase.SQLite.AppDbContext;
+namespace API.Infrastructure.Database;
 
 public class AppDbContext : DbContext
 {
