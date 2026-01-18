@@ -2,34 +2,38 @@ using API.Infrastructure.Database;
 using API.Application.Interfaces.Users.ITeacher;
 using API.Domain.Enums.UserRole;
 using API.Domain.Entities.User;
+using Google.Cloud.Firestore;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Infrastructure.Implementations.TeacherRepository;
 
 public class TeacherRepo: ITeacherReader, ITeacherWriter
 {
     private readonly AppDbContext _context;
-    public TeacherRepo(AppDbContext context)
+    private readonly FirestoreDb _db;
+    public TeacherRepo(AppDbContext context, FirestoreDb db)
     {
         _context = context;
+        _db = db;
     }
 
     // ITeacherReader implementation
     public async Task<List<GroupPublic>> GetTeacherGroupsAsync(string teacherId)
-    {
-        List<GroupPublic> groups = new List<GroupPublic>();
-        groups = await _context.Groups
-            .Where(g => g.TeacherId == teacherId)
-            .Select(g => new GroupPublic
-            {
-                GroupId = g.GroupId,
-                GroupName = g.GroupName,
-                TeacherUsername = g.TeacherUsername,
-                CreatedAt = g.CreatedAt,
-                GroupDescription = g.GroupDescription,
-                GroupImageLink = g.GroupImageLink
-            })
-            .ToListAsync();
-    }
+{
+    return await _context.Groups
+        .Where(g => g.TeacherId == teacherId)
+        .Select(g => new GroupPublic
+        {
+            GroupId = g.GroupId,
+            GroupName = g.GroupName,
+            TeacherUsername = g.TeacherUsername,
+            CreatedAt = g.CreatedAt,
+            GroupDescription = g.GroupDescription,
+            GroupImageLink = g.GroupImageLink
+        })
+        .ToListAsync();
+}
+
 
     public async Task<bool> isTeacher(string Id)
     {
@@ -79,5 +83,23 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
     {
         _context.Groups.Add(group);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task RemoveStudentFromGroupAsync(string teacherId, string groupId, string studentId)
+    {
+        var GrDoc = _db.Collection("Groups").Document(groupId);
+        var StDoc = _db.Collection("Students").Document(studentId);
+
+        //Remove an element of array in group document, the array is "Students", which contains Ids of students
+        await GrDoc.UpdateAsync("Students", FieldValue.ArrayRemove(new Dictionary<string, object>
+        {
+            { "StudId", studentId }
+        }));
+
+        await StDoc.UpdateAsync("Groups", FieldValue.ArrayRemove(new Dictionary<string, object>
+        {
+            { "GroupId", groupId }
+        }));
+
     }
 }
