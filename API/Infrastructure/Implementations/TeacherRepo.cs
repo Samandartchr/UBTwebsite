@@ -50,6 +50,10 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
             _context.Groups.Remove(group);
             await _context.SaveChangesAsync();
         }
+
+        // Delete group document from Firestore
+        var GrDoc = _db.Collection("Groups").Document(groupId);
+        await GrDoc.DeleteAsync();
     }
 
     public async Task InviteStudentToGroupAsync(string teacherId, string groupId, string studentId)
@@ -77,12 +81,37 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
             _context.GroupJoinOrders.Remove(invitation);
             await _context.SaveChangesAsync();
         }
+        // Add student to group in Firestore
+        var GrDoc = _db.Collection("Groups").Document(groupId);
+        var StDoc = _db.Collection("Students").Document(studentId);
+
+        await GrDoc.UpdateAsync("Students", FieldValue.ArrayUnion(new Dictionary<string, object>
+        {
+            { "StudId", studentId }
+        }));
+        await StDoc.UpdateAsync("Groups", FieldValue.ArrayUnion(new Dictionary<string, object>
+        {
+            { "GroupId", groupId }
+        }));
     }
 
     public async Task CreateGroup(Group group)
     {
         _context.Groups.Add(group);
         await _context.SaveChangesAsync();
+
+        // Create group document in Firestore
+        var GrDoc = _db.Collection("Groups").Document(group.GroupId);
+        await GrDoc.SetAsync(new Dictionary<string, object>
+        {
+            { "GroupName", group.GroupName },
+            { "TeacherId", group.TeacherId },
+            { "TeacherUsername", group.TeacherUsername },
+            { "CreatedAt", group.CreatedAt },
+            { "GroupDescription", group.GroupDescription },
+            { "GroupImageLink", group.GroupImageLink },
+            { "Students", new List<Dictionary<string, object>>() } // Initialize empty students array
+        });
     }
 
     public async Task RemoveStudentFromGroupAsync(string teacherId, string groupId, string studentId)

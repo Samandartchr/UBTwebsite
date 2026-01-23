@@ -83,6 +83,31 @@ public class UserRepo: IUserReader, IUserWriter
 
         _context.Users.Add(u);
         await _context.SaveChangesAsync();
+
+        //Add user document to Firestore
+        DocumentReference userDoc;
+        if (user.Role.ToString() == "Student")
+        {
+            userDoc = _db.Collection("Students").Document(user.Id);
+        }
+        else
+        {
+            userDoc = _db.Collection("Teachers").Document(user.Id);
+        }
+        await userDoc.SetAsync(new
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role.ToString(),
+            Name = user.Name,
+            Surname = user.Surname,
+            CreatedAt = user.CreatedAt,
+            PhoneNumber = user.PhoneNumber,
+            ProfileImageLink = user.ProfileImageLink,
+            isPremium = user.isPremium,
+            LastTimeTest = DateTime.UtcNow
+        });
     }
     public async Task ChangeSettings(string userId, Settings settings)
     {
@@ -96,5 +121,23 @@ public class UserRepo: IUserReader, IUserWriter
         user.ProfileImageLink = settings.ProfileImageLink;
 
         await _context.SaveChangesAsync();
+
+        //Update Firestore document
+        DocumentReference userDoc;
+        if (user.Role.ToString() == "Student")
+        {
+            userDoc = _db.Collection("Students").Document(user.Id);
+        }
+        else
+        {
+            userDoc = _db.Collection("Teachers").Document(user.Id);
+        }
+        await userDoc.UpdateAsync(new Dictionary<string, object>
+        {
+            { "Name", settings.Name },
+            { "Surname", settings.Surname },
+            { "PhoneNumber", settings.PhoneNumber },
+            { "ProfileImageLink", settings.ProfileImageLink }
+        });
     }
 }

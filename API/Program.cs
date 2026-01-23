@@ -2,10 +2,12 @@ using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
 using API.Infrastructure;
-using API.Infrastructure.Persistence.SQLdatabase.SQLite.Context;
+using API.Infrastructure.Database;
 using Google.Cloud.Firestore;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore.V1;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,13 +40,30 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://securetoken.google.com/" + firebaseProjectId;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "https://securetoken.google.com/" + firebaseProjectId,
+            ValidateAudience = true,
+            ValidAudience = firebaseProjectId,
+            ValidateLifetime = true
+        };
+    });
+builder.Services.AddEndpointsApiExplorer();
+//-------------------------------
 var app = builder.Build();
-
+//-------------------------------
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 
 app.UseHttpsRedirection();
 

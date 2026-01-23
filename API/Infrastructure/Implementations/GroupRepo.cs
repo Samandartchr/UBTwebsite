@@ -48,6 +48,15 @@ public class GroupRepo: IGroupReader, IGroupWriter
         group.GroupImageLink = settings.GroupImageLink;
 
         await _context.SaveChangesAsync();
+
+        // Update Firestore document
+        var GrDoc = _db.Collection("Groups").Document(Id);
+        var updates = new Dictionary<string, object>
+        {
+            { "GroupDescription", settings.GroupDescription },
+            { "GroupImageLink", settings.GroupImageLink }
+        };
+        await GrDoc.UpdateAsync(updates);
     }
 
     public async Task<List<UserPublicInfo>> GetGroupStudentsAsync(string Id, string groupId)

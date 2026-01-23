@@ -510,11 +510,26 @@ public class StudentRepo: IStudentReader, IStudentWriter
         if (invite == null) throw new Exception("Invite not found");
         _context.GroupJoinOrders.Remove(invite);
         await _context.SaveChangesAsync();
+        var doc = _db.Collection("Groups").Document(groupId);
+        var snapshot = await doc.GetSnapshotAsync();
+        //Add new student id to Students array in firestore document, the array is: Students[string StudId], use arrayUnion
+        if (snapshot.Exists)
+        {
+            await doc.UpdateAsync("Students", FieldValue.ArrayUnion(studentId));
+        }
+        else
+        {
+            throw new Exception("Group not found");
+        }
+
     }
 
     public async Task SubmitTestAsync(string studentId, TestResult testResult)
     {
         await _context.TestResults.AddAsync(testResult);
+        await _db.Collection("Students").Document(studentId).UpdateAsync("LastTimeTest", DateTime.UtcNow);
+        //in document there is TestResults array, add new test result to it
+        await _db.Collection("Students").Document(studentId).UpdateAsync("TestResults", FieldValue.ArrayUnion(testResult));
     }
 }
 
