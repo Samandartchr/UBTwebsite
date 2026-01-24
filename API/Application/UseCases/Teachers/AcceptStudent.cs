@@ -1,46 +1,49 @@
 using API.Application.Interfaces.Users.ITeacher;
 using API.Application.Interfaces.Users.IUser;
+using API.Application.Interfaces.Users.IGroup;
 
 namespace API.Application.UseCases.Teachers.AcceptStudent;
 
-public record AcceptStudentCommand(string token, string groupId, string studentUsername);
-public record AcceptStudentResult();
-
-public class AcceptStudentHandler
+public class AcceptStudentService
 {
     private readonly ITeacherWriter _teacherWriter;
     private readonly ITeacherReader _teacherReader;
     private readonly IUserReader _userReader;
-    AcceptStudentHandler(ITeacherWriter teacherWriter, ITeacherReader teacherReader, IUserReader userReader)
+    private readonly IGroupReader _groupReader;
+
+    public AcceptStudentService(
+        ITeacherWriter teacherWriter,
+        ITeacherReader teacherReader,
+        IUserReader userReader,
+        IGroupReader groupReader)
     {
         _teacherWriter = teacherWriter;
         _teacherReader = teacherReader;
         _userReader = userReader;
+        _groupReader = groupReader;
     }
-    public async Task<AcceptStudentResult> Handle(AcceptStudentCommand cmd)
+
+    /// <summary>
+    /// Accepts a student into a group. Throws exception if invalid.
+    /// </summary>
+    public async Task AcceptStudent(string token, string groupId, string studentUsername)
     {
-        //Authorization
-        if(!await _teacherReader.isTeacher(cmd.token))
-        {
-            throw new Exception(message: "You are not teacher");
-        }
+        // Authorization
+        if (!await _teacherReader.isTeacher(token))
+            throw new Exception("You are not a teacher");
 
-        //Validation
-        if(!await _teacherReader.isGroupExist(cmd.groupId))
-        {
-            throw new Exception(message: "Group not found");
-        }
-        //Fetch data
-        string studentId = await _userReader.GetIdByUsernameAsync(cmd.studentUsername);
+        // Validation
+        if (!await _groupReader.isGroupExist(groupId))
+            throw new Exception("Group not found");
 
-        //Logic
+        // Fetch data
+        string studentId = await _userReader.GetIdByUsernameAsync(studentUsername);
 
-        //Persist
-        await _teacherWriter.AcceptStudentToGroupAsync(cmd.token, cmd.groupId, studentId);
+        // Logic / Domain
 
-        //Side effects
+        // Persist
+        await _teacherWriter.AcceptStudentToGroupAsync(token, groupId, studentId);
 
-        //Return result
-        return new AcceptStudentResult();
+        // Side effects (if any)
     }
 }

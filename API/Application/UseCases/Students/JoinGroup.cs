@@ -3,43 +3,34 @@ using API.Application.Interfaces.Users.IUser;
 
 namespace API.Application.UseCases.Students.JoinGroup;
 
-public record JoinGroupCommand(string token, string groupId);
-public record JoinGroupResult();
-
-public class JoinGroupHandler
+public class JoinGroupService
 {
     private readonly IStudentWriter _studentWriter;
     private readonly IStudentReader _studentReader;
     private readonly IUserReader _userReader;
-    JoinGroupHandler(IStudentWriter studentWriter, IStudentReader studentReader, IUserReader userReader)
+
+    public JoinGroupService(IStudentWriter studentWriter, IStudentReader studentReader, IUserReader userReader)
     {
         _studentWriter = studentWriter;
         _studentReader = studentReader;
         _userReader = userReader;
     }
-    public async Task<JoinGroupResult> Handle(JoinGroupCommand cmd)
+
+    /// <summary>
+    /// Lets a student join a group. Throws if not a student or already in group.
+    /// </summary>
+    public async Task JoinGroup(string token, string groupId)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _studentReader.isStudent(Id))
-        {
-            throw new Exception(message: "You are not student");
-        }
-        //Validation
-        if(await _studentReader.IsStudentInGroupAsync(Id, cmd.groupId))
-        {
-            throw new Exception(message: "You are already in group");
-        }
-        //Fetch data
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _studentReader.isStudent(userId))
+            throw new Exception("You are not a student");
 
-        //Logic
-        
-        //Persist
-        await _studentWriter.JoinGroupAsync(Id, cmd.groupId);
+        // Validation
+        if (await _studentReader.IsInGroupAsync(userId, groupId))
+            throw new Exception("You are already in group");
 
-        //Side effects
-
-        //Return result
-        return new JoinGroupResult();
+        // Persist
+        await _studentWriter.JoinGroupAsync(userId, groupId);
     }
 }

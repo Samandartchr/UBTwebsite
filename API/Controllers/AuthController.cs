@@ -4,6 +4,8 @@ using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using API.Application.UseCases.Users.Register;
+using API.Domain.Entities.User;
 
 namespace API.Controllers.AuthController;
 
@@ -12,19 +14,33 @@ namespace API.Controllers.AuthController;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
-    
-    public AuthController(AppDbContext dbContext)
+    public readonly RegisterService _registerService;
+    public readonly FirebaseAuth _firebaseAuth;
+
+    public AuthController(AppDbContext dbContext, RegisterService registerService, FirebaseAuth firebaseAuth)
     {
         _dbContext = dbContext;
+        _registerService = registerService;
+        _firebaseAuth = firebaseAuth;
     }
 
     [HttpGet("checkuserexistence")]
-    public async Task<IActionResult> CheckUserExistence()
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<bool>> CheckUserExistence()
     {
         try
         {
+            var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized(new { Message = "Authorization header is missing or invalid" });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+
             // Extract the Firebase user ID from the JWT token
-            var firebaseUserId = User.FindFirst("user_id")?.Value;
+            FirebaseToken decodedToken = await _firebaseAuth.VerifyIdTokenAsync(token);
+            string firebaseUserId = decodedToken.Uid;
 
             if (string.IsNullOrEmpty(firebaseUserId))
             {
@@ -32,13 +48,37 @@ public class AuthController : ControllerBase
             }
 
             // Check if the user exists in the database
-            var userExists = await _dbContext.Users.AnyAsync(u => u.Id == firebaseUserId);
+            bool userExists = await _dbContext.Users.AnyAsync(u => u.Id == firebaseUserId);
 
-            return Ok(new { exists = userExists });
+            return userExists;
         }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while checking user existence.", error = ex.Message });
+        }
+    }
+
+    [HttpPost("createuser")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> CreateUser([FromBody] UserRegister user)
+    {
+        try
+        {
+            var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized(new { Message = "Authorization header is missing or invalid" });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+
+            bool result = await _registerService.Register(user, token);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while creating the user.", error = ex.Message });
         }
     }
 }

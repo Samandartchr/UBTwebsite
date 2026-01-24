@@ -4,39 +4,31 @@ using API.Application.Interfaces.Users.IStudent;
 
 namespace API.Application.UseCases.Students.GetGroups;
 
-public record GetGroupsCommand(string token);
-public record GetGroupsResult(List<GroupPublic> groups);
-
-public class GetGroupsHandler
+public class GetGroupsService
 {
     private readonly IStudentReader _studentReader;
     private readonly IUserReader _userReader;
 
-    GetGroupsHandler(IStudentReader studentReader, IUserReader userReader)
+    public GetGroupsService(IStudentReader studentReader, IUserReader userReader)
     {
         _studentReader = studentReader;
         _userReader = userReader;
     }
-    public async Task<GetGroupsResult> Handle(GetGroupsCommand cmd)
+
+    /// <summary>
+    /// Returns all groups a student belongs to. Throws if not a student.
+    /// </summary>
+    public async Task<List<GroupPublic>> GetGroups(string token)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _studentReader.isStudent(Id))
-        {
-            throw new Exception(message: "You are not student");
-        }
-        //Validation
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _studentReader.isStudent(userId))
+            throw new Exception("You are not a student");
 
-        //Fetch data
-        List<GroupPublic> groups = await _studentReader.GetGroups(Id);
+        // Fetch data
+        List<GroupPublic> groups = await _studentReader.GetGroups(userId);
 
-        //Logic
-        
-        //Persist
-
-        //Side effects
-
-        //Return result
-        return new GetGroupsResult(groups: groups);
+        // Return result
+        return groups;
     }
 }

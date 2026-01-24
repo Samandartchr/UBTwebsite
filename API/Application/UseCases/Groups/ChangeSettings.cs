@@ -5,47 +5,40 @@ using API.Application.Interfaces.Users.IGroup;
 
 namespace API.Application.UseCases.Groups.ChangeSettings;
 
-public record ChangeSettingsCommand(string token, string groupId, GroupSettings settings);
-public record ChangeSettingsResult();
-
-public class ChangeSettingsHandler
+public class ChangeSettingsService
 {
     private readonly IUserReader _userReader;
     private readonly ITeacherReader _teacherReader;
     private readonly IGroupWriter _groupWriter;
     private readonly IGroupReader _groupReader;
 
-
-    ChangeSettingsHandler(IUserReader userReader, ITeacherReader teacherReader, IGroupWriter groupWriter, IGroupReader groupReader)
+    public ChangeSettingsService(
+        IUserReader userReader,
+        ITeacherReader teacherReader,
+        IGroupWriter groupWriter,
+        IGroupReader groupReader)
     {
         _userReader = userReader;
         _teacherReader = teacherReader;
         _groupWriter = groupWriter;
         _groupReader = groupReader;
     }
-    public async Task<ChangeSettingsResult> Handle(ChangeSettingsCommand cmd)
+
+    /// <summary>
+    /// Changes the settings of a group if the user is a teacher and the group exists.
+    /// </summary>
+    public async Task ChangeGroupSettings(string token, string groupId, GroupSettings settings)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _teacherReader.isTeacher(Id))
-        {
-            throw new Exception(message: "You are not a teacher");
-        }
-        //Validation
-        if(!await _groupReader.isGroupExist(cmd.groupId))
-        {
-            throw new Exception(message: "Group does not exist");
-        }
-        //Fetch data
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _teacherReader.isTeacher(userId))
+            throw new Exception("You are not a teacher");
 
-        //Logic
+        // Validation
+        if (!await _groupReader.isGroupExist(groupId))
+            throw new Exception("Group does not exist");
 
-        //Persist
-        await _groupWriter.ChangeGroupSettings(cmd.groupId, cmd.settings);
-
-        //Side effects
-
-        //Return result
-        return new ChangeSettingsResult();
+        // Persist changes
+        await _groupWriter.ChangeGroupSettings(groupId, settings);
     }
 }

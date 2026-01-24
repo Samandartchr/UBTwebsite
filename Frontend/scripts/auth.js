@@ -1,6 +1,6 @@
 //Import firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getAuth, signOut, createUserWithEmailAndPassword, 
+import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, sendEmailVerification } 
 from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -18,6 +18,15 @@ const firebaseConfig = {
 //Initialize firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+let user = null;
+onAuthStateChanged(auth, (currentUser) => {
+  user = currentUser;
+});
+
+document.getElementById("regBtn").addEventListener("click", register);
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("createUserBtn").addEventListener("click", createUser);
 
 //Register
 async function register() 
@@ -44,9 +53,8 @@ async function login()
   try 
   {
     await signInWithEmailAndPassword(auth, email, password);
-    alert("Кіру сәтті орындалды.");
 
-    const user = auth.currentUser;
+    user = auth.currentUser;
 
     if (!user) 
     {
@@ -63,18 +71,27 @@ async function login()
     const exists = await fetch('http://localhost:5275/api/auth/checkuserexistence', {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${await getToken()}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email: user.email })
     })
 
-    if (!exists) 
+    const userExists = await exists.json();
+
+    console.log(userExists);
+
+    if (userExists == true)
+    {
+      window.location.href = "home.html";
+    }
+
+    else if (!userExists && user.emailVerified) 
     {
       // Redirect to registration form
+      alert("Мәліметтерді толтырыңыз");
       document.getElementById('login').classList.add('hidden');
       document.getElementById('secondary').classList.remove('hidden');
     }
-
   } 
   catch (error) 
   {
@@ -82,6 +99,44 @@ async function login()
   }
 }
 window.login = login;
+
+//Create user
+async function createUser()
+{
+  var userregister = 
+  {
+    email: user.email,
+    username: document.getElementById("regUsername").value,
+    name: document.getElementById("regName").value,
+    surname: document.getElementById("regSurname").value,
+    role: document.getElementById("regRole").value
+  }
+
+  console.log(userregister);
+
+  var token = await getToken();
+
+  try
+  {
+    const response = await fetch('http://localhost:5275/api/auth/createuser', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userregister)
+    });
+
+    if (response.ok) 
+    {
+      window.location.href = "home.html";
+    } 
+  }
+  catch(error)
+  {
+    alert(error.message);
+  }
+}
 
 //Logout
 async function logout()
@@ -91,12 +146,13 @@ async function logout()
 window.logout = logout;
 
 //get token
-export async function getToken()
-{
+async function getToken() {
   const user = auth.currentUser;
-  if (user) 
-  {
-    return await user.getIdToken();
+  if (!user) {
+    console.log("No user signed in");
+    return null;
   }
-  return null;
+  
+  const token = await user.getIdToken();
+  return token;
 }

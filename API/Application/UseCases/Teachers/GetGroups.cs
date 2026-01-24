@@ -4,39 +4,31 @@ using API.Application.Interfaces.Users.ITeacher;
 
 namespace API.Application.UseCases.Teachers.GetGroups;
 
-public record GetGroupsCommand(string token);
-public record GetGroupsResult(List<GroupPublic> groups);
-
-public class GetGroupsHandler
+public class GetGroupsService
 {
     private readonly ITeacherReader _teacherReader;
     private readonly IUserReader _userReader;
-    GetGroupsHandler(ITeacherReader teacherReader, IUserReader userReader)
+
+    public GetGroupsService(ITeacherReader teacherReader, IUserReader userReader)
     {
         _teacherReader = teacherReader;
         _userReader = userReader;
     }
-    public async Task<GetGroupsResult> Handle(GetGroupsCommand cmd)
+
+    /// <summary>
+    /// Returns all groups for a teacher. Throws exception if not a teacher.
+    /// </summary>
+    public async Task<List<GroupPublic>> GetGroups(string token)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _teacherReader.isTeacher(Id))
-        {
-            throw new Exception(message: "You are not teacher");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _teacherReader.isTeacher(userId))
+            throw new Exception("You are not a teacher");
 
-        //Validation
+        // Fetch data
+        List<GroupPublic> groups = await _teacherReader.GetTeacherGroupsAsync(userId);
 
-        //Fetch data
-        List<GroupPublic> groups = await _teacherReader.GetTeacherGroupsAsync(Id);
-
-        //Logic(Domain)
-        
-        //Persist
-
-        //Side effects
-
-        //Return result
-        return new GetGroupsResult(groups: groups);
+        // Return result
+        return groups;
     }
 }

@@ -42,5 +42,5 @@ public class MatchQuestion: Question
     public string Type { get; set; } = "Match";
     public required List<Block> LeftSide { get; set; }
     public required List<Block> RightSide { get; set; }
-    public required bool[2,4] CorrectMatches { get; set; }
+    public required bool[,] CorrectMatches { get; set; } = new bool[2,4];
 }

@@ -1,46 +1,35 @@
 using API.Domain.Enums.Subject;
-using API.Domain.Enums.UserRole;
 using API.Domain.Entities.Test;
-using API.Domain.Entities.User;
 using API.Application.Interfaces.Users.IStudent;
 using API.Application.Interfaces.Users.IUser;
 
 namespace API.Application.UseCases.Students.GetTest;
 
-public record GetTestCommand(string token, Subject Subject1, Subject Subject2);
-public record GetTestResult(Test test);
-
-public class GetTestHandler
+public class GetTestService
 {
     private readonly IStudentReader _studentReader;
     private readonly IUserReader _userReader;
 
-    GetTestHandler(IStudentReader studentReader, IUserReader userReader)
+    public GetTestService(IStudentReader studentReader, IUserReader userReader)
     {
         _studentReader = studentReader;
         _userReader = userReader;
     }
-    public async Task<GetTestResult> Handle(GetTestCommand cmd)
+
+    /// <summary>
+    /// Returns a test for the student for the given subjects. Throws if not a student.
+    /// </summary>
+    public async Task<Test> GetTest(string token, Subject subject1, Subject subject2)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _studentReader.isStudent(Id))
-        {
-            throw new Exception(message: "You are not student");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _studentReader.isStudent(userId))
+            throw new Exception("You are not a student");
 
-        //Validation
+        // Fetch test data
+        Test test = await _studentReader.GetTestAsync(userId, subject1, subject2);
 
-        //Fetch data
-        Test test = await _studentReader.GetTestAsync(Id, cmd.Subject1, cmd.Subject2);
-
-        //Logic(Domain)
-
-        //Persist
-
-        //Side effects
-
-        //Return result
-        return new GetTestResult(test: test);
+        // Return result
+        return test;
     }
 }

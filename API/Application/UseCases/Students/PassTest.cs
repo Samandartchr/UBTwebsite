@@ -4,19 +4,18 @@ using API.Domain.Entities.Test;
 
 namespace API.Application.UseCases.Students.PassTest;
 
-public record PassTestCommand(string token, Test Test);
-public record PassTestResult(TestResultClient result);
-
-public class PassTestHandler
+public class PassTestService
 {
     private readonly IStudentWriter _studentWriter;
     private readonly IStudentReader _studentReader;
     private readonly IStudentCalculator _studentCalculator;
     private readonly IUserReader _userReader;
-    PassTestHandler(IStudentWriter studentWriter, 
-                    IStudentReader studentReader, 
-                    IStudentCalculator studentCalculator, 
-                    IUserReader userReader)
+
+    public PassTestService(
+        IStudentWriter studentWriter,
+        IStudentReader studentReader,
+        IStudentCalculator studentCalculator,
+        IUserReader userReader)
     {
         _studentWriter = studentWriter;
         _studentReader = studentReader;
@@ -24,25 +23,31 @@ public class PassTestHandler
         _userReader = userReader;
     }
 
-    public async Task<PassTestResult> Handle(PassTestCommand cmd)
+    /// <summary>
+    /// Submits a student's test, calculates results, and persists them.
+    /// Throws if user is not a student.
+    /// </summary>
+    public async Task<TestResultClient> PassTest(string token, Test test)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _studentReader.isStudent(Id))
-        {
-            throw new Exception(message: "You are not student");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _studentReader.isStudent(userId))
+            throw new Exception("You are not a student");
 
-        //Validation
-        //Do test rules are implemented here?
+        // Fetch actual answers
+        TestAnswers realAnswers = await _studentReader.GetTestAnswersAsync(userId, test);
 
-        //Fetch data
-        TestAnswers realAnswers = await _studentReader.GetTestAnswersAsync(Id, cmd.Test);
+        // Fetch student's answers
+        TestAnswers studentAnswers = await _studentCalculator.GetStudentAnswersAsync(userId, test);
 
-        //Logic(Domain)
-        TestAnswers studentAnswers = await _studentCalculator.GetStudentAnswersAsync(Id, cmd.Test);
-        TestResult testResult = await _studentCalculator.CalculateTestResultAsync(Id, studentAnswers, realAnswers, cmd.Test.SecondarySubject1.Subject, cmd.Test.SecondarySubject2.Subject);
-        TestResultClient res = new TestResultClient
+        // Calculate test result
+        TestResult testResult = await _studentCalculator.CalculateTestResultAsync(
+            userId, studentAnswers, realAnswers,
+            test.SecondarySubject1.Subject,
+            test.SecondarySubject2.Subject
+        );
+
+        TestResultClient resultClient = new TestResultClient
         {
             TakenAt = testResult.TakenAt,
             SecondarySubject1 = testResult.SecondarySubject1,
@@ -54,12 +59,10 @@ public class PassTestHandler
             SecondarySubject2Score = testResult.SecondarySubject2Score,
             TotalScore = testResult.TotalScore
         };
-        //Persist
-        await _studentWriter.SubmitTestAsync(Id, testResult);
 
-        //Side effects
+        // Persist results
+        await _studentWriter.SubmitTestAsync(userId, testResult);
 
-        //Return result
-        return new PassTestResult(result: res);
+        return resultClient;
     }
 }

@@ -2,44 +2,38 @@ using API.Domain.Entities.Settings;
 using API.Application.Interfaces.Users.IUser;
 using API.Domain.Rules.SettingsRules;
 
-
 namespace API.Application.UseCases.Users.ChangeSettings;
 
-public record ChangeSettingsCommand(string token, Settings settings);
-public record ChangeSettingsResult(bool isChanged);
-
-public class ChangeSettingsHandler
+public class ChangeSettingsService
 {
     private readonly IUserWriter _userWriter;
     private readonly IUserReader _userReader;
 
-    ChangeSettingsHandler(IUserWriter userWriter, IUserReader userReader)
+    public ChangeSettingsService(IUserWriter userWriter, IUserReader userReader)
     {
         _userWriter = userWriter;
         _userReader = userReader;
     }
 
-    public async Task<ChangeSettingsResult> Handle(ChangeSettingsCommand cmd)
+    /// <summary>
+    /// Changes user settings. Throws exception if invalid.
+    /// </summary>
+    public async Task<bool> ChangeSettings(string token, Settings settings)
     {
-        //Authorization
-        string userId = await _userReader.GetIdAsync(cmd.token);
-        
-        //Validation
-        if (!SettingsValidator.isSettingsValid(cmd.settings))
-        {
-            throw new Exception(message: "Invalid settings");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
 
-        //Fetch data
+        // Validation
+        if (!SettingsValidator.isSettingsValid(settings))
+            throw new Exception("Invalid settings");
 
-        //Logic(Domain)
+        // Logic / Domain
 
-        //Persist
-        await _userWriter.ChangeSettings(userId, cmd.settings);
+        // Persist
+        await _userWriter.ChangeSettings(userId, settings);
 
-        //Side effects
-        
-        //Return result
-        return new ChangeSettingsResult(isChanged: true);
+        // Side effects (if any)
+
+        return true;
     }
 }

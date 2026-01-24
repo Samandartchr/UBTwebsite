@@ -15,7 +15,7 @@
       <input class="input" type="email" id="regEmail" placeholder="Электрондық пошта">
       <input class="input" type="password" id="regPassword" placeholder="Құпия сөз">
 
-      <button class="btn btn-primary" onclick="registerUser()">Тіркелу</button>
+      <button class="btn btn-primary" id="regBtn">Тіркелу</button>
       <a href="#" onclick="document.getElementById('login').classList.remove('hidden'); document.getElementById('register').classList.add('hidden');">Менің аккаунтым бар</a>
     </div>
 
@@ -25,19 +25,20 @@
       <input class="input" type="email" id="loginEmail" placeholder="Электрондық пошта">
       <input class="input" type="password" id="loginPassword" placeholder="Құпия сөз">
 
-      <button class="btn btn-primary" onclick="loginUser()">Кіру</button>
+      <button class="btn btn-primary" id="loginBtn">Кіру</button>
       <a href="#" onclick="document.getElementById('register').classList.remove('hidden'); document.getElementById('login').classList.add('hidden');">Тіркелу</a>
     </div>
 
     <div id="secondary" class="card auth-block hidden">
-      <input class="input" type="text" id="regUsernmae" placeholder="Пайдаланушы аты">
+      <input class="input" type="text" id="regUsername" placeholder="Пайдаланушы аты">
       <input class="input" type="text" id="regName" placeholder="Аты">
       <input class="input" type="text" id="regSurname" placeholder="Тегі">
       <label class="text-muted" for="regRole">Рөліңізді таңдаңыз:</label>
       <select class="input" id="regRole">
-        <option value="student">Оқушы</option>
-        <option value="teacher">Мұғалім</option>
+        <option value="Student">Оқушы</option>
+        <option value="Teacher">Мұғалім</option>
       </select>
+      <button class="btn btn-primary" id="createUserBtn">Кіру</button>
     </div>
 
   </div>

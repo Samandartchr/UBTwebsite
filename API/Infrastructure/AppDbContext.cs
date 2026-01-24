@@ -26,7 +26,10 @@ public class AppDbContext : DbContext
             HasConversion<string>();
             
         builder.Entity<TestResult>().
+            HasNoKey().
             Property(r => r.SecondarySubject2).
             HasConversion<string>();
+        builder.Entity<GroupJoinOrder>().
+            HasNoKey();
     }
 }

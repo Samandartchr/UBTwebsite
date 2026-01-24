@@ -1,61 +1,57 @@
 using API.Domain.Entities.User;
 using API.Application.Interfaces.Users.IUser;
-using API.Domain.Enums.UserRole;
 using API.Domain.Rules.RegisterRules;
 
 namespace API.Application.UseCases.Users.Register;
 
-public record RegisterCommand(UserRegister userRegister, string FirebaseToken);
-public record RegisterResult(bool isSucceed);
-
-public class RegisterHandler
+public class RegisterService
 {
     private readonly IUserReader _userReader;
     private readonly IUserWriter _userWriter;
 
-    RegisterHandler(IUserReader userReader, IUserWriter userWriter)
+    public RegisterService(IUserReader userReader, IUserWriter userWriter)
     {
         _userReader = userReader;
         _userWriter = userWriter;
     }
 
-    public async Task<RegisterResult> Handle(RegisterCommand cmd)
+    /// <summary>
+    /// Executes user registration.
+    /// Throws Exception if validation fails.
+    /// </summary>
+    public async Task<bool> Register(UserRegister userRegister, string firebaseToken)
     {
-        //Authorization, can user do this?
-        string userId = await _userReader.GetIdAsync(cmd.FirebaseToken);
+        // Authorization
+        string userId = await _userReader.GetIdAsync(firebaseToken);
 
-        //Validation
-        if (!RegisterValidator.isRegistrationValid(cmd.userRegister))
-        {
-            throw new Exception(message: "Invalid registration");
-        }
-        else if (await _userReader.isUsernameExist(cmd.userRegister.Username))
-        {
-            throw new Exception(message: "Username already exist");
-        }
-        else if (string.IsNullOrWhiteSpace(cmd.FirebaseToken)){throw new Exception(message: "Invalid Firebase token");}
+        // Validation
+        if (!RegisterValidator.isRegistrationValid(userRegister))
+            throw new Exception("Invalid registration");
 
-        //Fetch data
+        if (await _userReader.isUsernameExist(userRegister.Username))
+            throw new Exception("Username already exists");
 
-        //Logic(Domain)
+        if (string.IsNullOrWhiteSpace(firebaseToken))
+            throw new Exception("Invalid Firebase token");
+
+        // Logic / Domain
         User user = new User
         {
-            Username = cmd.userRegister.Username,
-            Email = cmd.userRegister.Email,
-            Role = cmd.userRegister.Role,
-            Name = cmd.userRegister.Name,
-            Surname = cmd.userRegister.Surname,
+            Username = userRegister.Username,
+            Email = userRegister.Email,
+            Role = userRegister.Role,
+            Name = userRegister.Name,
+            Surname = userRegister.Surname,
             CreatedAt = DateTime.UtcNow,
             isPremium = false,
             Id = userId
         };
-        
-        //Persist
+
+        // Persist
         await _userWriter.AddUser(user);
 
-        //Side effects
+        // Side effects (if any)
 
-        //Return result
-        return new RegisterResult(isSucceed: true);
+        return true;
     }
 }

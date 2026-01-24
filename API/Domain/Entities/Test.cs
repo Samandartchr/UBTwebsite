@@ -1,5 +1,6 @@
 using API.Domain.Entities.QuestionTypes;
 using API.Domain.Enums.Subject;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Domain.Entities.Test;
 
@@ -51,8 +52,8 @@ public class TestAnswers
 
 public class KazakhHistoryTestAnswers
 {
-    public required bool[10 , 4] SingleChoiceAnswers { get; set; } 
-    public required List<bool[5 , 4]> ContextAnswers { get; set; }
+    public required bool[ , ] SingleChoiceAnswers { get; set; } = new bool[10 , 4];
+    public required List<bool[,]> ContextAnswers { get; set; } = new List<bool[,]>();
 }
 
 public class FunctionalLiteracyTestAnswers
@@ -62,15 +63,15 @@ public class FunctionalLiteracyTestAnswers
 
 public class MathematicalLiteracyTestAnswers
 {
-    public required bool[10 , 4] SingleChoiceAnswers { get; set; }
+    public required bool[,] SingleChoiceAnswers { get; set; } = new bool[10 , 4];
 }
 
 public class SecondarySubjectTestAnswers
 {
-    public required bool[25 , 4] SingleChoiceAnswers { get; set; }
-    public required bool[5 , 6] MultipleChoiceAnswers { get; set; }
-    public required bool[5 , 4] ContextAnswers { get; set; }
-    public required List<bool[2 , 4]> MatchAnswers { get; set; }
+    public required bool[,] SingleChoiceAnswers { get; set; } = new bool[25, 4];
+    public required bool[ , ] MultipleChoiceAnswers { get; set; } = new bool[5 , 6];
+    public required bool[ , ] ContextAnswers { get; set; } = new bool[5 , 4];
+    public required List<bool[ , ]> MatchAnswers { get; set; } = new List<bool[,]>();
 }
 
 public class TestResultPremium

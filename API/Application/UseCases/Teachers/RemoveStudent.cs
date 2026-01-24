@@ -1,49 +1,50 @@
 using API.Application.Interfaces.Users.ITeacher;
 using API.Application.Interfaces.Users.IUser;
+using API.Application.Interfaces.Users.IGroup;
 
 namespace API.Application.UseCases.Teachers.RemoveStudent;
 
-public record RemoveStudentCommand(string token, string groupId, string studentUsername);
-public record RemoveStudentResult();
-
-public class RemoveStudentHandler
+public class RemoveStudentService
 {
     private readonly ITeacherWriter _teacherWriter;
     private readonly ITeacherReader _teacherReader;
     private readonly IUserReader _userReader;
-    RemoveStudentHandler(ITeacherWriter teacherWriter, ITeacherReader teacherReader, IUserReader userReader)
+    private readonly IGroupReader _groupReader;
+
+    public RemoveStudentService(
+        ITeacherWriter teacherWriter,
+        ITeacherReader teacherReader,
+        IUserReader userReader,
+        IGroupReader groupReader)
     {
         _teacherWriter = teacherWriter;
         _teacherReader = teacherReader;
         _userReader = userReader;
+        _groupReader = groupReader;
     }
 
-    public async Task<RemoveStudentResult> Handle(RemoveStudentCommand cmd)
+    /// <summary>
+    /// Removes a student from a group. Throws exception if invalid.
+    /// </summary>
+    public async Task RemoveStudent(string token, string groupId, string studentUsername)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _teacherReader.isTeacher(Id))
-        {
-            throw new Exception(message: "You are not teacher");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _teacherReader.isTeacher(userId))
+            throw new Exception("You are not a teacher");
 
-        //Validation
-        if(!await _teacherReader.isGroupExist(cmd.groupId))
-        {
-            throw new Exception(message: "Group not found");
-        }
+        // Validation
+        if (!await _groupReader.isGroupExist(groupId))
+            throw new Exception("Group not found");
 
-        //Fetch data
-        string studentId = await _userReader.GetIdByUsernameAsync(cmd.studentUsername);
+        // Fetch data
+        string studentId = await _userReader.GetIdByUsernameAsync(studentUsername);
 
-        //Logic
-        
-        //Persist
-        await _teacherWriter.RemoveStudentFromGroupAsync(Id, cmd.groupId, studentId);
-        
-        //Side effects
+        // Logic / Domain
 
-        //Return result
-        return new RemoveStudentResult();
+        // Persist
+        await _teacherWriter.RemoveStudentFromGroupAsync(userId, groupId, studentId);
+
+        // Side effects (if any)
     }
 }

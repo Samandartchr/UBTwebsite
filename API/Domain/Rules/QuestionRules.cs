@@ -43,9 +43,8 @@ public static class QuestionValidator
         if (string.IsNullOrEmpty(question.Text) && string.IsNullOrEmpty(question.ImageLink)) {return false;}
         else if (question.LeftSide.Count != 2){return false;}
         else if (question.RightSide.Count != 4){return false;}
-        else if (question.Pairs.Count != 2){return false;}
-        if (question.Pairs[0].Count != 2){return false;}
-        if (question.Pairs[1].Count != 2){return false;}
+        if (question.CorrectMatches.GetLength(0) != 2) return false;
+        if (question.CorrectMatches.GetLength(1) != 4) return false;
         return true;
     }
 }

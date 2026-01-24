@@ -7,10 +7,11 @@ public static class RegisterValidator
 {
     public static bool isUsernameValid(string username)
     {
+        string allowedChars = "abcdefghijklmnopqrstuvwxyz0123456789._";
         if (username.Length < 4 || username.Length > 15 || string.IsNullOrWhiteSpace(username)){return false;}
         foreach (char c in username)
         {
-            if (!char.IsLetterOrDigit(c) && c != '.' && c != '_')
+            if (!allowedChars.Contains(c))
             {
                 return false;
             }

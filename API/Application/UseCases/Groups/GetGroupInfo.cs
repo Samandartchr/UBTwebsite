@@ -4,39 +4,33 @@ using API.Application.Interfaces.Users.IUser;
 
 namespace API.Application.UseCases.Groups.GetGroupInfo;
 
-public record GetGroupInfoCommand(string token, string groupId);
-public record GetGroupInfoResult(GroupPublic group);
-public class GetGroupInfoHandler
+public class GetGroupInfoService
 {
     private readonly IGroupReader _groupReader;
     private readonly IUserReader _userReader;
 
-    GetGroupInfoHandler(IGroupReader groupReader, IUserReader userReader)
+    public GetGroupInfoService(IGroupReader groupReader, IUserReader userReader)
     {
         _groupReader = groupReader;
         _userReader = userReader;
     }
-    
-    public async Task<GetGroupInfoResult> Handle(GetGroupInfoCommand cmd)
+
+    /// <summary>
+    /// Retrieves information about a group if it exists.
+    /// Throws if the group does not exist.
+    /// </summary>
+    public async Task<GroupPublic> GetGroupInfo(string token, string groupId)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _groupReader.isGroupExist(cmd.groupId))
-        {
-            throw new Exception(message: "Group does not exist");
-        }
-        //Validation
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
 
-        //Fetch data
-        GroupPublic group = await _groupReader.GetGroupAsync(cmd.groupId);
+        // Validation
+        if (!await _groupReader.isGroupExist(groupId))
+            throw new Exception("Group does not exist");
 
-        //Logic
+        // Fetch data
+        GroupPublic group = await _groupReader.GetGroupAsync(groupId);
 
-        //Persists
-
-        //Side effects
-
-        //Return result
-        return new GetGroupInfoResult(group: group);
+        return group;
     }
 }

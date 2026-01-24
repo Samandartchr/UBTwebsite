@@ -5,35 +5,33 @@ using API.Application.Interfaces.Users.IGroup;
 
 namespace API.Application.UseCases.Groups.GetGroupResults;
 
-public record GetGroupResultsCommand(string token, string groupId);
-public record GetGroupResultsResult(List<TestResultClient> results);
-
-public class GetGroupResultsHandler
+public class GetGroupResultsService
 {
     private readonly IUserReader _userReader;
     private readonly IGroupReader _groupReader;
 
-    GetGroupResultsHandler(IUserReader userReader, IGroupReader groupReader)
+    public GetGroupResultsService(IUserReader userReader, IGroupReader groupReader)
     {
         _userReader = userReader;
         _groupReader = groupReader;
     }
-    public async Task<GetGroupResultsResult> Handle(GetGroupResultsCommand cmd)
-    {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _groupReader.isGroupExist(cmd.groupId))
-        {
-            throw new Exception(message: "Group does not exist");
-        }
-        //Validation
-        //Fetch data
-        List<TestResultClient> results = await _groupReader.GetTestResultsGroupAsync(Id, cmd.groupId);
 
-        //Logic
-        //Persists
-        //Side effects
-        //Return result
-        return new GetGroupResultsResult(results: results);
+    /// <summary>
+    /// Retrieves all test results for a group.
+    /// Throws if the group does not exist.
+    /// </summary>
+    public async Task<List<TestResultClient>> GetGroupResults(string token, string groupId)
+    {
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+
+        // Validation
+        if (!await _groupReader.isGroupExist(groupId))
+            throw new Exception("Group does not exist");
+
+        // Fetch data
+        List<TestResultClient> results = await _groupReader.GetTestResultsGroupAsync(userId, groupId);
+
+        return results;
     }
 }

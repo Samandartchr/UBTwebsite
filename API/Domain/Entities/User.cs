@@ -1,20 +1,32 @@
 using API.Domain.Enums.Subject;
 using API.Domain.Enums.UserRole;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace API.Domain.Entities.User;
 
 public class UserRegister
 {
     [Column("username")]
+    [JsonPropertyName("username")]
     public required string Username { get; set; }
+
     [Column("email")]
+    [JsonPropertyName("email")]
     public required string Email { get; set; }
+
     [Column("role")]
+    [JsonPropertyName("role")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required UserRole Role { get; set; }
+
     [Column("name")]
+    [JsonPropertyName("name")]
     public required string Name { get; set; }
+
     [Column("surname")]
+    [JsonPropertyName("surname")]
     public required string Surname { get; set; }
 }
 

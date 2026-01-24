@@ -3,46 +3,41 @@ using API.Application.Interfaces.Users.IUser;
 
 namespace API.Application.UseCases.Students.AcceptInvite;
 
-public record AcceptInviteCommand(string token, string groupId);
-public record AcceptInviteResult();
-
-public class AcceptInviteHandler
+public class AcceptInviteService
 {
     private readonly IStudentWriter _studentWriter;
     private readonly IStudentReader _studentReader;
     private readonly IUserReader _userReader;
-    AcceptInviteHandler(IStudentWriter studentWriter, IStudentReader studentReader, IUserReader userReader)
+
+    public AcceptInviteService(
+        IStudentWriter studentWriter,
+        IStudentReader studentReader,
+        IUserReader userReader)
     {
         _studentWriter = studentWriter;
         _studentReader = studentReader;
         _userReader = userReader;
     }
 
-    public async Task<AcceptInviteResult> Handle(AcceptInviteCommand cmd)
+    /// <summary>
+    /// Accepts a group invite for a student. Throws exception if invalid.
+    /// </summary>
+    public async Task AcceptInvite(string token, string groupId)
     {
-        //Authorization
-        string Id = await _userReader.GetIdAsync(cmd.token);
-        if(!await _studentReader.isStudent(Id))
-        {
-            throw new Exception(message: "You are not student");
-        }
+        // Authorization
+        string userId = await _userReader.GetIdAsync(token);
+        if (!await _studentReader.isStudent(userId))
+            throw new Exception("You are not a student");
 
-        //Validation
-        if(await _studentReader.IsStudentInGroupAsync(Id, cmd.groupId))
-        {
-            throw new Exception(message: "You are already in group");
-        }
+        // Validation
+        if (await _studentReader.IsInGroupAsync(userId, groupId))
+            throw new Exception("You are already in the group");
 
-        //Fetch data
+        // Logic / Domain
 
-        //Logic
-        
-        //Persist
-        await _studentWriter.AcceptGroupInviteAsync(Id, cmd.groupId);
+        // Persist
+        await _studentWriter.AcceptGroupInviteAsync(userId, groupId);
 
-        //Side effects
-
-        //Return result
-        return new AcceptInviteResult();
+        // Side effects (if any)
     }
 }
