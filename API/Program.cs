@@ -81,7 +81,12 @@ builder.Services.AddScoped<IGroupWriter, GroupRepo>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => 
+    p.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()));  // Important for Authorization headers
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -101,14 +106,18 @@ builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 //-------------------------------
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+//if (app.Environment.IsDevelopment())
+//{
+    //app.MapOpenApi();
+//}
+
+app.UseDeveloperExceptionPage();
+
+app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseHttpsRedirection();
+app.UseAuthentication();
 
 app.UseAuthorization();
 

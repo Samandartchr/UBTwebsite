@@ -27,10 +27,10 @@ public class UserRepo: IUserReader, IUserWriter
         FirebaseToken decodedToken = await _auth.VerifyIdTokenAsync(token);
         return decodedToken.Uid;
     }
-    public async Task<bool> isUsernameExist(string nickname)
+    public bool isUsernameExist(string nickname)
     {
         bool exists;
-        exists = await _context.Users.AnyAsync(user => user.Username == nickname);
+        exists = _context.Users.Any(user => user.Username == nickname);
         return exists;
     }
     public async Task<UserPublicInfo> GetUserPublicInfoAsync(string username)

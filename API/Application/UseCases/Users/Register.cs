@@ -28,7 +28,7 @@ public class RegisterService
         if (!RegisterValidator.isRegistrationValid(userRegister))
             throw new Exception("Invalid registration");
 
-        if (await _userReader.isUsernameExist(userRegister.Username))
+        if (_userReader.isUsernameExist(userRegister.Username))
             throw new Exception("Username already exists");
 
         if (string.IsNullOrWhiteSpace(firebaseToken))

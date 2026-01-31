@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, 
         signInWithEmailAndPassword, sendEmailVerification } 
 from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 //Firebase keys
 const firebaseConfig = {
@@ -27,6 +28,81 @@ onAuthStateChanged(auth, (currentUser) => {
 document.getElementById("regBtn").addEventListener("click", register);
 document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("createUserBtn").addEventListener("click", createUser);
+
+const usernameInput = document.getElementById("regUsername");
+const usernameHint = document.getElementById("usernameHint");
+
+const nameInput = document.getElementById("regName");
+const nameHint = document.getElementById("nameHint");
+
+const surnameInput = document.getElementById("regSurname");
+const surnameHint = document.getElementById("surnameHint");
+
+usernameInput.addEventListener("input", () => {
+  const value = usernameInput.value.toLowerCase();
+    usernameInput.value = value;
+
+    const valid = /^[a-z0-9._]{4,15}$/.test(value);
+
+    if (!value) {
+        usernameHint.textContent = "";
+        //usernameInput.className = "";
+        return;
+    }
+
+    if (valid) {
+        usernameInput.classList.add("valid");
+        usernameInput.classList.remove("invalid");
+        //usernameInput.className = "valid";
+        usernameHint.textContent = "✓ valid";
+    } else {
+        usernameInput.classList.add("invalid");
+        usernameInput.classList.remove("valid");
+        //usernameInput.className = "invalid";
+        usernameHint.textContent = "only a–z, 0–9, . _ (4–15 chars)";
+    }
+});
+
+nameInput.addEventListener("input", () => {
+  const value = nameInput.value.trim();
+
+  if (!value) {
+    nameHint.textContent = "";
+    nameInput.classList.remove("valid", "invalid");
+    return;
+  }
+
+  if (isUnicodeNameValid(value)) {
+    nameInput.classList.add("valid");
+    nameInput.classList.remove("invalid");
+    nameHint.textContent = "✓ valid";
+  } else {
+    nameInput.classList.add("invalid");
+    nameInput.classList.remove("valid");
+    nameHint.textContent = "letters only";
+  }
+});
+
+surnameInput.addEventListener("input", () => {
+  const value = surnameInput.value.trim();
+
+  if (!value) {
+    surnameHint.textContent = "";
+    surnameInput.classList.remove("valid", "invalid");
+    return;
+  }
+
+  if (isUnicodeNameValid(value)) {
+    surnameInput.classList.add("valid");
+    surnameInput.classList.remove("invalid");
+    surnameHint.textContent = "✓ valid";
+  } else {
+    surnameInput.classList.add("invalid");
+    surnameInput.classList.remove("valid");
+    surnameHint.textContent = "letters only";
+  }
+});
+
 
 //Register
 async function register() 
@@ -101,20 +177,47 @@ async function login()
 window.login = login;
 
 //Create user
+//Create user
 async function createUser()
 {
+  // Validate username
+  const result = validateUsername(document.getElementById("regUsername").value);
+  if (!result.ok) 
+  {
+    alert(result.error);
+    return;
+  }
+  document.getElementById("regUsername").value = result.value;
+
+  // FIX: Validate name - isUnicodeNameValid returns boolean, not object!
+  const nameValue = document.getElementById("regName").value.trim();
+  if (!isUnicodeNameValid(nameValue)) 
+  {
+    alert("Аты дұрыс емес. Тек әріптер қолданыңыз.");
+    return;
+  }
+
+  // FIX: Validate surname - same issue
+  const surnameValue = document.getElementById("regSurname").value.trim();
+  if (!isUnicodeNameValid(surnameValue)) 
+  {
+    alert("Тегі дұрыс емес. Тек әріптер қолданыңыз.");
+    return;
+  }
+
   var userregister = 
   {
     email: user.email,
     username: document.getElementById("regUsername").value,
-    name: document.getElementById("regName").value,
-    surname: document.getElementById("regSurname").value,
+    name: nameValue,  // Use validated values
+    surname: surnameValue,  // Use validated values
     role: document.getElementById("regRole").value
   }
 
-  console.log(userregister);
+  console.log("Sending user data:", userregister);
 
   var token = await getToken();
+  console.log("Token:", token ? "✓ Obtained" : "✗ Missing");
 
   try
   {
@@ -127,14 +230,36 @@ async function createUser()
       body: JSON.stringify(userregister)
     });
 
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
     if (response.ok) 
     {
-      window.location.href = "home.html";
-    } 
+      const data = await response.json();
+      console.log("Backend returned:", data);
+
+      if (data === true) 
+      {
+        console.log("✓ User created successfully! Redirecting...");
+        window.location.href = "home.html";
+      } 
+      else 
+      {
+        console.error("✗ Backend returned false");
+        alert("Тіркеу сәтсіз аяқталды");
+      }
+    }
+    else
+    {
+      const err = await response.json();
+      console.error("Server error:", err);
+      alert(err.message || err.error || "Сервер қатесі");
+    }
   }
   catch(error)
   {
-    alert(error.message);
+    console.error("Fetch error:", error);
+    alert(`Қате: ${error.message}`);
   }
 }
 
@@ -155,4 +280,35 @@ async function getToken() {
   
   const token = await user.getIdToken();
   return token;
+}
+
+function validateUsername(username) {
+    if (!username || !username.trim()) return { ok: false, error: "Username required" };
+
+    const normalized = username.toLowerCase();
+
+    const regex = /^[a-z0-9._]+$/;
+    if (!regex.test(normalized)) {
+        return {
+            ok: false,
+            error: "Only lowercase letters, numbers, . and _ allowed"
+        };
+    }
+
+    return { ok: true, value: normalized };
+}
+
+function isUnicodeNameValid(value) {
+  return /^[\p{L}]+$/u.test(value);
+}
+
+async function loginWithToken(customToken) {
+  try {
+    const userCredential = await signInWithCustomToken(auth, customToken);
+    console.log("User signed in:", userCredential.user);
+    return userCredential.user;
+  } catch (error) {
+    console.error("Error signing in with token:", error);
+    throw error;
+  }
 }

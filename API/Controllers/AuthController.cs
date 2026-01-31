@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("createuser")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> CreateUser([FromBody] UserRegister user)
+    public async Task<ActionResult<bool>> CreateUser([FromBody] UserRegister user)
     {
         try
         {
@@ -74,7 +74,7 @@ public class AuthController : ControllerBase
 
             bool result = await _registerService.Register(user, token);
 
-            return Ok(result);
+            return result;
         }
         catch (Exception ex)
         {
