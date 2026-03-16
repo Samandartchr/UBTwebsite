@@ -78,18 +78,15 @@ public class StudentRepo: IStudentReader, IStudentWriter
 
     public async Task<bool> IsInGroupAsync(string studentId, string groupId)
     {
-        var doc = _db.Collection("Groups").Document(groupId);
-        var snapshot = await doc.GetSnapshotAsync();
-        if (snapshot.Exists)
-        {
-            var students = snapshot.GetValue<List<string>>("StudentID");
-            return students.Contains(studentId);
-        }
-        else
-        {
-            throw new Exception("Group not found");
-        }
+        var snapshot = await _db.Collection("Groups").Document(groupId).GetSnapshotAsync();
 
+        if (!snapshot.Exists)
+            throw new Exception("Group not found");
+
+        if (!snapshot.TryGetValue<List<string>>("Students", out var students) || students == null)
+            return false;
+
+        return students.Contains(studentId);
     }
 
     public async Task<Test> GetTestAsync(string studentId, Subject sub1, Subject sub2)
@@ -471,15 +468,23 @@ public class StudentRepo: IStudentReader, IStudentWriter
         return answers;
     }
 
-    public async Task<List<GroupPublic>> GetGroups(string studentId)
+    public async Task<List<GroupPublic>> GetStudentGroups(string studentId)
     {
-        var snap = _db.Collection("Students").Document(studentId).GetSnapshotAsync().Result;
-        var groups = snap.GetValue<List<string>>("Groups");
-        List<GroupPublic> groupPublics = new List<GroupPublic>();
-        foreach (var groupId in groups)
+        var snap = await _db.Collection("Students")
+            .Document(studentId)
+            .GetSnapshotAsync();
+
+        if (!snap.Exists) return new List<GroupPublic>();
+
+        var groups = snap.GetValue<List<string>>("Groups") ?? new List<string>();
+
+        var tasks = groups.Select(async groupId =>
         {
-            var groupSnap = _db.Collection("Groups").Document(groupId).GetSnapshotAsync().Result;
-            groupPublics.Add(new GroupPublic
+            var groupSnap = await _db.Collection("Groups")
+                .Document(groupId)
+                .GetSnapshotAsync();
+
+            return new GroupPublic
             {
                 GroupId = groupSnap.Id,
                 GroupName = groupSnap.GetValue<string>("GroupName"),
@@ -487,41 +492,56 @@ public class StudentRepo: IStudentReader, IStudentWriter
                 GroupDescription = groupSnap.GetValue<string>("GroupDescription"),
                 GroupImageLink = groupSnap.GetValue<string>("GroupImageLink"),
                 TeacherUsername = groupSnap.GetValue<string>("TeacherUsername")
-            });
-        }
-        return groupPublics;
+            };
+        });
+
+        return (await Task.WhenAll(tasks)).ToList();
     }
     //Writer methods
     public async Task JoinGroupAsync(string studentId, string groupId)
     {
         Group group = await _context.Groups.FirstOrDefaultAsync(g => g.GroupId == groupId)?? throw new Exception("Group not found");
         string TeacherId = group.TeacherId;
+        if(await _context.GroupJoinOrders.AnyAsync(o => o.GroupId == groupId && o.SenderId == TeacherId && o.AcceptorId == studentId))
+        {
+            throw new Exception("Teacher already sent invitation to student");
+        }
+        if(await _context.GroupJoinOrders.AnyAsync(o => o.GroupId == groupId && o.SenderId == studentId && o.AcceptorId == TeacherId))
+        {
+            throw new Exception("Student already sent invitation to teacher");
+        }
         await _context.GroupJoinOrders.AddAsync(new GroupJoinOrder
         {
             GroupId = groupId,
             AcceptorId = TeacherId,
             SenderId = studentId,
         });
+        await _context.SaveChangesAsync();
     }
 
     public async Task AcceptGroupInviteAsync(string studentId, string groupId)
     {
         var invite = await _context.GroupJoinOrders.FirstOrDefaultAsync(gi => gi.GroupId == groupId && gi.AcceptorId == studentId);
         if (invite == null) throw new Exception("Invite not found");
+
         _context.GroupJoinOrders.Remove(invite);
         await _context.SaveChangesAsync();
-        var doc = _db.Collection("Groups").Document(groupId);
-        var snapshot = await doc.GetSnapshotAsync();
-        //Add new student id to Students array in firestore document, the array is: Students[string StudId], use arrayUnion
-        if (snapshot.Exists)
-        {
-            await doc.UpdateAsync("Students", FieldValue.ArrayUnion(studentId));
-        }
-        else
-        {
-            throw new Exception("Group not found");
-        }
 
+        bool isInGroup = await IsInGroupAsync(studentId, groupId);
+        if (isInGroup) throw new Exception("Student is already in the group");
+
+        var doc = _db.Collection("Groups").Document(groupId);
+        var docc = _db.Collection("Students").Document(studentId);
+
+        var snapshot = await doc.GetSnapshotAsync();
+        var snap = await docc.GetSnapshotAsync();
+
+        if (!snapshot.Exists || !snap.Exists)
+            throw new Exception("Group or Student document not found");
+
+        // SetAsync with merge creates the field if it doesn't exist
+        await doc.SetAsync(new { Students = FieldValue.ArrayUnion(studentId) }, SetOptions.MergeAll);
+        await docc.SetAsync(new { Groups = FieldValue.ArrayUnion(groupId) }, SetOptions.MergeAll);
     }
 
     public async Task SubmitTestAsync(string studentId, TestResult testResult)

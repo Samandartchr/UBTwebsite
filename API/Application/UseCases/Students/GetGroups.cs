@@ -18,7 +18,7 @@ public class GetGroupsService
     /// <summary>
     /// Returns all groups a student belongs to. Throws if not a student.
     /// </summary>
-    public async Task<List<GroupPublic>> GetGroups(string token)
+    public async Task<List<GroupPublic>> GetGroupsOfStudent(string token)
     {
         // Authorization
         string userId = await _userReader.GetIdAsync(token);
@@ -26,7 +26,7 @@ public class GetGroupsService
             throw new Exception("You are not a student");
 
         // Fetch data
-        List<GroupPublic> groups = await _studentReader.GetGroups(userId);
+        List<GroupPublic> groups = await _studentReader.GetStudentGroups(userId);
 
         // Return result
         return groups;

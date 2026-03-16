@@ -1,6 +1,8 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using API.Infrastructure;
 using API.Infrastructure.Database;
 using API.Infrastructure.DI;
@@ -56,10 +58,10 @@ builder.Services.AddSingleton(FirebaseAuth.DefaultInstance);
 builder.Services.AddSingleton(_ => FirestoreDb.Create(firebaseProjectId, firestoreClient));
 
 builder.Services.AddControllers();
-builder.Services.AddControllers()
+/*builder.Services.AddControllers()
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));*/
 
 builder.Services.AddInfrastructure();
 
@@ -82,7 +84,11 @@ builder.Services.AddScoped<IGroupWriter, GroupRepo>();
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => 
-    p.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+    p.WithOrigins("http://127.0.0.1:5500", 
+                  "http://localhost:5500", 
+                  "http://localhost:5550", 
+                  "http://localhost:8080",
+                  "http://10.110.239.243:8080")
      .AllowAnyHeader()
      .AllowAnyMethod()
      .AllowCredentials()));  // Important for Authorization headers

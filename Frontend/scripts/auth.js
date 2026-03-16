@@ -23,6 +23,8 @@ export const auth = getAuth(app);
 let user = null;
 onAuthStateChanged(auth, (currentUser) => {
   user = currentUser;
+  userEmail = user.email;
+  console.log(user);
 });
 
 document.getElementById("regBtn").addEventListener("click", register);
@@ -37,6 +39,8 @@ const nameHint = document.getElementById("nameHint");
 
 const surnameInput = document.getElementById("regSurname");
 const surnameHint = document.getElementById("surnameHint");
+
+let userEmail;
 
 usernameInput.addEventListener("input", () => {
   const value = usernameInput.value.toLowerCase();
@@ -125,10 +129,11 @@ window.register = register;
 async function login()
 {
   const email = document.getElementById("loginEmail").value;
+  userEmail = email;
   const password = document.getElementById("loginPassword").value;
   try 
   {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCred =await signInWithEmailAndPassword(auth, email, password);
 
     user = auth.currentUser;
 
@@ -158,7 +163,9 @@ async function login()
 
     if (userExists == true)
     {
-      window.location.href = "home.html";
+      const userPublicInfo = await GetUser();
+      sessionStorage.setItem("userPublicInfo", JSON.stringify(userPublicInfo));
+      window.location.href = `${userPublicInfo.role}home.html`;
     }
 
     else if (!userExists && user.emailVerified) 
@@ -168,6 +175,8 @@ async function login()
       document.getElementById('login').classList.add('hidden');
       document.getElementById('secondary').classList.remove('hidden');
     }
+
+    else{window.location.reload()}
   } 
   catch (error) 
   {
@@ -180,6 +189,7 @@ window.login = login;
 //Create user
 async function createUser()
 {
+  
   // Validate username
   const result = validateUsername(document.getElementById("regUsername").value);
   if (!result.ok) 
@@ -204,10 +214,9 @@ async function createUser()
     alert("Тегі дұрыс емес. Тек әріптер қолданыңыз.");
     return;
   }
-
   var userregister = 
   {
-    email: user.email,
+    email: userEmail,
     username: document.getElementById("regUsername").value,
     name: nameValue,  // Use validated values
     surname: surnameValue,  // Use validated values
@@ -221,6 +230,7 @@ async function createUser()
 
   try
   {
+    console.log("page refreshing");
     const response = await fetch('http://localhost:5275/api/auth/createuser', {
       method: 'POST',
       headers: {
@@ -231,9 +241,9 @@ async function createUser()
     });
 
     console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
+    console.log("Response ok:", response);
 
-    if (response.ok) 
+    if (response) 
     {
       const data = await response.json();
       console.log("Backend returned:", data);
@@ -241,7 +251,9 @@ async function createUser()
       if (data === true) 
       {
         console.log("✓ User created successfully! Redirecting...");
-        window.location.href = "home.html";
+        const userPublicInfo = await GetUser();
+        sessionStorage.setItem("userPublicInfo", JSON.stringify(userPublicInfo));
+        window.location.href = `${userPublicInfo.role}home.html`;
       } 
       else 
       {
@@ -260,8 +272,16 @@ async function createUser()
   {
     console.error("Fetch error:", error);
     alert(`Қате: ${error.message}`);
+    window.addEventListener("unhandledrejection", e => {
+  console.error("UNHANDLED:", e.reason);
+});
+window.addEventListener("error", e => {
+  console.error("ERROR:", e.message);
+});
+
   }
 }
+window.createUser = createUser;
 
 //Logout
 async function logout()
@@ -310,5 +330,26 @@ async function loginWithToken(customToken) {
   } catch (error) {
     console.error("Error signing in with token:", error);
     throw error;
+  }
+}
+
+async function GetUser()
+{
+  let userPublicInfo;
+  try
+  {
+    userPublicInfo = await fetch('http://localhost:5275/api/auth/getuser',{
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${await getToken()}`,
+        'Content-Type': 'application/json'
+      }
+    }).then(r => r.json());
+    console.log(userPublicInfo);
+    return userPublicInfo;
+  }
+  catch(error)
+  {
+    alert(error);
   }
 }

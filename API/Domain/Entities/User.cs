@@ -100,10 +100,20 @@ public class Group: GroupPublic
 [Table("group_join_orders")]
 public class GroupJoinOrder
 {
+    [Column("ID")]
+    public Guid Id {get; set; } = Guid.NewGuid();
     [Column("group_id")]
     public required string GroupId {get; set;}
     [Column("sender_id")]
     public required string SenderId {get; set;}
     [Column("acceptor_id")]
     public required string AcceptorId {get; set;}
+}
+public class GroupJoinOrderPublic
+{
+    public Guid Id { get; set; }
+    public required string GroupId {get; set;}
+    public required string GroupName {get; set;}
+    public string? AcceptorUsername {get; set;}
+    public string? SenderUsername {get; set; }
 }

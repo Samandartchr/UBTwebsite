@@ -19,7 +19,7 @@ public interface IStudentReader
     Task<Test> GetTestAsync(string studentId, Subject SecondarySubject1, Subject SecondarySubject2);
     Task<List<TestResultClient>> GetTestResultsAsync(string studentId);
     Task<TestAnswers> GetTestAnswersAsync(string studentId, Test test);
-    Task<List<GroupPublic>> GetGroups(string studentId);
+    Task<List<GroupPublic>> GetStudentGroups(string studentId);
 
     
     Task<bool> isStudent(string Id);

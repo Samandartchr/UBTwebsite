@@ -29,7 +29,7 @@ public class AppDbContext : DbContext
             HasNoKey().
             Property(r => r.SecondarySubject2).
             HasConversion<string>();
-        builder.Entity<GroupJoinOrder>().
-            HasNoKey();
+      //  builder.Entity<GroupJoinOrder>().
+         //   HasNoKey();
     }
 }

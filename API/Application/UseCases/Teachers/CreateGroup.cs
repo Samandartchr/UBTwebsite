@@ -39,8 +39,8 @@ public class CreateGroupService
         if (await _groupReader.isGroupExist(group.GroupId))
             throw new Exception("Group already exists");
 
-        if (!RegisterValidator.isUsernameValid(group.GroupName))
-            throw new Exception("Invalid group name");
+        /*if (!RegisterValidator.isUsernameValid(group.GroupName))
+            throw new Exception("Invalid group name");*/
 
         // Logic / Domain
 
