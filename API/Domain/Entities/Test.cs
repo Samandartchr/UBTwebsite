@@ -1,6 +1,9 @@
 using API.Domain.Entities.QuestionTypes;
 using API.Domain.Enums.Subject;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using API.Domain.Entities.QuestionTypes;
+using Google.Cloud.Firestore;
 
 namespace API.Domain.Entities.Test;
 
@@ -12,32 +15,48 @@ public class Test
     public required SecondarySubjectTest SecondarySubject1 { get; set; }
     public required SecondarySubjectTest SecondarySubject2 { get; set; }
 }
-
+[FirestoreData]
 public class TestResultClient
 {
+    [Column("id")]
+    [FirestoreProperty]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     [Column("taken_at")]
+    [FirestoreProperty]
     public required DateTime TakenAt { get; set; }
     [Column("secondary_subject_1")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [FirestoreProperty(ConverterType = typeof(SubjectConverter))]
     public required Subject SecondarySubject1 { get; set; }
     [Column("secondary_subject_2")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [FirestoreProperty(ConverterType = typeof(SubjectConverter))]
     public required Subject SecondarySubject2 { get; set; }
     [Column("kazakh_history_score") ]
+    [FirestoreProperty]
     public required int KazakhHistoryScore { get; set; }
     [Column("functional_literacy_score")]
+    [FirestoreProperty]
     public required int FunctionalLiteracyScore { get; set; }
     [Column("mathematical_literacy_score")]
+    [FirestoreProperty]
     public required int MathematicalLiteracyScore { get; set; }
     [Column("secondary_subject_1_score")]
+    [FirestoreProperty]
     public required int SecondarySubject1Score { get; set; }
     [Column("secondary_subject_2_score")]
+    [FirestoreProperty]
     public required int SecondarySubject2Score { get; set; }
     [Column("total_score")]
+    [FirestoreProperty]
     public required int TotalScore { get; set; }
 }
 [Table("test_results")]
+[FirestoreData]
 public class TestResult: TestResultClient
 {
     [Column("student_id")]
+    [FirestoreProperty]
     public required string StudentId { get; set; }
 }
 

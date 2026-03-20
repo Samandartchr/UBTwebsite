@@ -1,4 +1,4 @@
-using API.Domain.Entities.User;
+﻿using API.Domain.Entities.User;
 using API.Domain.Entities.Test;
 using API.Domain.Enums.UserRole;
 using API.Application.Interfaces.Users.IStudent;
@@ -91,383 +91,404 @@ public class StudentRepo: IStudentReader, IStudentWriter
 
     public async Task<Test> GetTestAsync(string studentId, Subject sub1, Subject sub2)
     {
-        int KazakhHistoryBaseSize = _db.Collection("KazakhHistory").Document("Metadata").GetSnapshotAsync().Result.GetValue<int>("BaseSize");
-        int FunctionalLiteracyBaseSize = _db.Collection("FunctionalLiteracy").Document("Metadata").GetSnapshotAsync().Result.GetValue<int>("BaseSize");
-        int MathematicalLiteracyBaseSize = _db.Collection("MathematicalLiteracy").Document("Metadata").GetSnapshotAsync().Result.GetValue<int>("BaseSize");
-        int Sub1BaseSize = _db.Collection(sub1.ToString()).Document("Metadata").GetSnapshotAsync().Result.GetValue<int>("BaseSize");
-        int Sub2BaseSize = _db.Collection(sub2.ToString()).Document("Metadata").GetSnapshotAsync().Result.GetValue<int>("BaseSize");
+        // ── 1. Получаем BaseSize для каждого предмета ─────────────────────────────
+        var metaSnapshots = await Task.WhenAll(
+            _db.Collection("KazakhstanHistory").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection("FunctionalLiteracy").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection("MathematicalLiteracy").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection(sub1.ToString()).Document("Metadata").GetSnapshotAsync(),
+            _db.Collection(sub2.ToString()).Document("Metadata").GetSnapshotAsync()
+        );
 
-        int KzHisBase = new Random().Next(1, KazakhHistoryBaseSize + 1);
-        int FuncLitBase = new Random().Next(1, FunctionalLiteracyBaseSize + 1);
-        int MathLitBase = new Random().Next(1, MathematicalLiteracyBaseSize + 1);
-        int Sub1Base = new Random().Next(1, Sub1BaseSize + 1);
-        int Sub2Base = new Random().Next(1, Sub2BaseSize + 1);
+        int kazakhHistoryBaseSize = metaSnapshots[0].GetValue<int>("BaseSize");
+        int functionalLiteracyBaseSize = metaSnapshots[1].GetValue<int>("BaseSize");
+        int mathematicalLiteracyBase = metaSnapshots[2].GetValue<int>("BaseSize");
+        int sub1BaseSize = metaSnapshots[3].GetValue<int>("BaseSize");
+        int sub2BaseSize = metaSnapshots[4].GetValue<int>("BaseSize");
 
-        int KzHisSingleChoiceSize = _db.Collection("KazakhHistory").Document("Single-"+KzHisBase.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int KzHisContextSize = _db.Collection("KazakhHistory").Document("Context-"+KzHisBase.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int FuncLitContextSize = _db.Collection("FunctionalLiteracy").Document("Context-"+FuncLitBase.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int MathLitSingleChoiceSize = _db.Collection("MathematicalLiteracy").Document("Single-"+MathLitBase.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub1SingleChoiceSize = _db.Collection(sub1.ToString()).Document("Single-"+Sub1Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub1MultipleChoiceSize = _db.Collection(sub1.ToString()).Document("Multiple-"+Sub1Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub1ContextSize = _db.Collection(sub1.ToString()).Document("Context-"+Sub1Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub1MatchSize = _db.Collection(sub1.ToString()).Document("Match-"+Sub1Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub2SingleChoiceSize = _db.Collection(sub2.ToString()).Document("Single-"+Sub2Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub2MultipleChoiceSize = _db.Collection(sub2.ToString()).Document("Multiple-"+Sub2Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub2ContextSize = _db.Collection(sub2.ToString()).Document("Context-"+Sub2Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
-        int Sub2MatchSize = _db.Collection(sub2.ToString()).Document("Match-"+Sub2Base.ToString()).GetSnapshotAsync().Result.GetValue<int>("Count");
+        // ── 2. Случайно выбираем номер базы для каждого предмета ─────────────────
+        int kzHisBase = Random.Shared.Next(1, kazakhHistoryBaseSize + 1);
+        int funcLitBase = Random.Shared.Next(1, functionalLiteracyBaseSize + 1);
+        int mathLitBase = Random.Shared.Next(1, mathematicalLiteracyBase + 1);
+        int sub1Base = Random.Shared.Next(1, sub1BaseSize + 1);
+        int sub2Base = Random.Shared.Next(1, sub2BaseSize + 1);
 
-        int[] KzHisSingleChoiceIDs = Enumerable.Range(1, KzHisSingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(10).ToArray();
-        int[] KzHisContextIDs = Enumerable.Range(1, KzHisContextSize).OrderBy(_ => Random.Shared.Next()).Take(2).ToArray();
-        int[] FuncLitContextIDs = Enumerable.Range(1, FuncLitContextSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
-        int[] MathLitSingleChoiceIDs = Enumerable.Range(1, MathLitSingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(10).ToArray();
-        int[] Sub1SingleChoiceIDs = Enumerable.Range(1, Sub1SingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(25).ToArray();
-        int[] Sub1MultipleChoiceIDs = Enumerable.Range(1, Sub1MultipleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
-        int Sub1ContextID = new Random().Next(1, Sub1ContextSize + 1);
-        int[] Sub1MatchIDs = Enumerable.Range(1, Sub1MatchSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
-        int[] Sub2SingleChoiceIDs = Enumerable.Range(1, Sub2SingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(25).ToArray();
-        int[] Sub2MultipleChoiceIDs = Enumerable.Range(1, Sub2MultipleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
-        int Sub2ContextID = new Random().Next(1, Sub2ContextSize + 1);
-        int[] Sub2MatchIDs = Enumerable.Range(1, Sub2MatchSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+        // ── 3. Получаем все нужные документы параллельно ─────────────────────────
+        var docSnapshots = await Task.WhenAll(
+            _db.Collection("KazakhstanHistory").Document("Single-" + kzHisBase).GetSnapshotAsync(),
+            _db.Collection("KazakhstanHistory").Document("Context-" + kzHisBase).GetSnapshotAsync(),
+            _db.Collection("FunctionalLiteracy").Document("Context-" + funcLitBase).GetSnapshotAsync(),
+            _db.Collection("MathematicalLiteracy").Document("Single-" + mathLitBase).GetSnapshotAsync(),
+            _db.Collection(sub1.ToString()).Document("Single-" + sub1Base).GetSnapshotAsync(),
+            _db.Collection(sub1.ToString()).Document("Multiple-" + sub1Base).GetSnapshotAsync(),
+            _db.Collection(sub1.ToString()).Document("Context-" + sub1Base).GetSnapshotAsync(),
+            _db.Collection(sub1.ToString()).Document("Match-" + sub1Base).GetSnapshotAsync(),
+            _db.Collection(sub2.ToString()).Document("Single-" + sub2Base).GetSnapshotAsync(),
+            _db.Collection(sub2.ToString()).Document("Multiple-" + sub2Base).GetSnapshotAsync(),
+            _db.Collection(sub2.ToString()).Document("Context-" + sub2Base).GetSnapshotAsync(),
+            _db.Collection(sub2.ToString()).Document("Match-" + sub2Base).GetSnapshotAsync()
+        );
 
-        var KzHisSingleChoiceDoc = _db.Collection("KazakhHistory").Document("Single-"+KzHisBase.ToString());
-        var KzHisContextDoc = _db.Collection("KazakhHistory").Document("Context-"+KzHisBase.ToString());
-        var FuncLitContextDoc = _db.Collection("FunctionalLiteracy").Document("Context-"+FuncLitBase.ToString());
-        var MathLitSingleChoiceDoc = _db.Collection("MathematicalLiteracy").Document("Single-"+MathLitBase.ToString());
-        var Sub1SingleChoiceDoc = _db.Collection(sub1.ToString()).Document("Single-"+Sub1Base.ToString());
-        var Sub1MultipleChoiceDoc = _db.Collection(sub1.ToString()).Document("Multiple-"+Sub1Base.ToString());
-        var Sub1ContextDoc = _db.Collection(sub1.ToString()).Document("Context-"+Sub1Base.ToString());
-        var Sub1MatchDoc = _db.Collection(sub1.ToString()).Document("Match-"+Sub1Base.ToString());
-        var Sub2SingleChoiceDoc = _db.Collection(sub2.ToString()).Document("Single-"+Sub2Base.ToString());
-        var Sub2MultipleChoiceDoc = _db.Collection(sub2.ToString()).Document("Multiple-"+Sub2Base.ToString());
-        var Sub2ContextDoc = _db.Collection(sub2.ToString()).Document("Context-"+Sub2Base.ToString());
-        var Sub2MatchDoc = _db.Collection(sub2.ToString()).Document("Match-"+Sub2Base.ToString());
+        var kzHisSingleSnap = docSnapshots[0];
+        var kzHisContextSnap = docSnapshots[1];
+        var funcLitContextSnap = docSnapshots[2];
+        var mathLitSingleSnap = docSnapshots[3];
+        var sub1SingleSnap = docSnapshots[4];
+        var sub1MultipleSnap = docSnapshots[5];
+        var sub1ContextSnap = docSnapshots[6];
+        var sub1MatchSnap = docSnapshots[7];
+        var sub2SingleSnap = docSnapshots[8];
+        var sub2MultipleSnap = docSnapshots[9];
+        var sub2ContextSnap = docSnapshots[10];
+        var sub2MatchSnap = docSnapshots[11];
 
-        List<SingleChoiceQuestion> KzHisSingleChoiceQuestions = new List<SingleChoiceQuestion>();
-        foreach (var n in KzHisSingleChoiceIDs)
+        // ── 4. Считываем Count из каждого документа ───────────────────────────────
+        int kzHisSingleChoiceSize = kzHisSingleSnap.GetValue<int>("Count");
+        int kzHisContextSize = kzHisContextSnap.GetValue<int>("Count");
+        int funcLitContextSize = funcLitContextSnap.GetValue<int>("Count");
+        int mathLitSingleChoiceSize = mathLitSingleSnap.GetValue<int>("Count");
+        int sub1SingleChoiceSize = sub1SingleSnap.GetValue<int>("Count");
+        int sub1MultipleChoiceSize = sub1MultipleSnap.GetValue<int>("Count");
+        int sub1ContextSize = sub1ContextSnap.GetValue<int>("Count");
+        int sub1MatchSize = sub1MatchSnap.GetValue<int>("Count");
+        int sub2SingleChoiceSize = sub2SingleSnap.GetValue<int>("Count");
+        int sub2MultipleChoiceSize = sub2MultipleSnap.GetValue<int>("Count");
+        int sub2ContextSize = sub2ContextSnap.GetValue<int>("Count");
+        int sub2MatchSize = sub2MatchSnap.GetValue<int>("Count");
+
+        // ── 5. Случайные индексы (FIX: Range(0, Size), не Range(1, Size)) ─────────
+        int[] kzHisSingleChoiceIDs = Enumerable.Range(0, kzHisSingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(10).ToArray();
+        int[] kzHisContextIDs = Enumerable.Range(0, kzHisContextSize).OrderBy(_ => Random.Shared.Next()).Take(2).ToArray();
+        int[] funcLitContextIDs = Enumerable.Range(0, funcLitContextSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+        int[] mathLitSingleChoiceIDs = Enumerable.Range(0, mathLitSingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(10).ToArray();
+        int[] sub1SingleChoiceIDs = Enumerable.Range(0, sub1SingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(25).ToArray();
+        int[] sub1MultipleChoiceIDs = Enumerable.Range(0, sub1MultipleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+        int sub1ContextID = Random.Shared.Next(0, sub1ContextSize);
+        int[] sub1MatchIDs = Enumerable.Range(0, sub1MatchSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+        int[] sub2SingleChoiceIDs = Enumerable.Range(0, sub2SingleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(25).ToArray();
+        int[] sub2MultipleChoiceIDs = Enumerable.Range(0, sub2MultipleChoiceSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+        int sub2ContextID = Random.Shared.Next(0, sub2ContextSize);
+        int[] sub2MatchIDs = Enumerable.Range(0, sub2MatchSize).OrderBy(_ => Random.Shared.Next()).Take(5).ToArray();
+
+        // ── 6. Формируем списки вопросов (снэпшот берётся один раз, не в цикле) ──
+
+        // KazakhHistory — Single Choice
+        var kzHisSingleIDs = kzHisSingleSnap.GetValue<List<string>>("IDs");
+        var kzHisSingleChoiceQuestions = kzHisSingleChoiceIDs
+            .Select(n => kzHisSingleSnap.GetValue<SingleChoiceQuestion>(kzHisSingleIDs[n]))
+            .ToList();
+
+        // KazakhHistory — Context
+        var kzHisContextIDs_list = kzHisContextSnap.GetValue<List<string>>("IDs");
+        var kzHisContextQuestions = kzHisContextIDs
+            .Select(n => kzHisContextSnap.GetValue<ContextQuestion>(kzHisContextIDs_list[n]))
+            .ToList();
+
+        // FunctionalLiteracy — Context (набираем ровно 10 подвопросов)
+        var funcLitIDs = funcLitContextSnap.GetValue<List<string>>("IDs");
+        var funcLitContextQuestions = new List<ContextQuestion>();
+        int totalFuncLitSubQs = 0;
+
+        foreach (var n in funcLitContextIDs)
         {
-            string q = KzHisSingleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            KzHisSingleChoiceQuestions.Add(KzHisSingleChoiceDoc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(q));
-        }
+            if (totalFuncLitSubQs >= 10) break;
 
-        List<ContextQuestion> KzHisContextQuestions = new List<ContextQuestion>();
-        foreach (var n in KzHisContextIDs)
-        {
-            string q = KzHisContextDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            KzHisContextQuestions.Add(KzHisContextDoc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(q));
-        }
+            var context = funcLitContextSnap.GetValue<ContextQuestion>(funcLitIDs[n]);
+            int remaining = 10 - totalFuncLitSubQs;
 
-        List<ContextQuestion> FuncLitContextQuestions = new List<ContextQuestion>();
-        int number = 0;
-        foreach (var n in FuncLitContextIDs)
-        {
-            if (number >= 10) break;
-
-            string q = FuncLitContextDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            ContextQuestion context = FuncLitContextDoc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(q);
-
-            if (number + context.Questions.Count > 10)
+            if (context.Questions.Count > remaining)
             {
-                ContextQuestion trimmedContext = new ContextQuestion
+                // FIX: Take(remaining) — не Take(10 - n)
+                funcLitContextQuestions.Add(new ContextQuestion
                 {
                     Id = context.Id,
                     Subject = context.Subject,
-                    ContextImageLink = context.ContextImageLink,
                     ContextText = context.ContextText,
-                    Questions = context.Questions.Take(10 - n).ToList()
-                };
-                FuncLitContextQuestions.Add(trimmedContext);
+                    ContextImageLink = context.ContextImageLink,
+                    Questions = context.Questions.Take(remaining).ToList()
+                });
+                totalFuncLitSubQs += remaining;
             }
             else
             {
-                FuncLitContextQuestions.Add(context);
-                number += context.Questions.Count;
+                funcLitContextQuestions.Add(context);
+                totalFuncLitSubQs += context.Questions.Count;
             }
         }
 
-        List<SingleChoiceQuestion> MathLitSingleChoiceQuestions = new List<SingleChoiceQuestion>();
-        foreach (var n in MathLitSingleChoiceIDs)
-        {
-            string q = MathLitSingleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            MathLitSingleChoiceQuestions.Add(MathLitSingleChoiceDoc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(q));
-        }
+        // MathematicalLiteracy — Single Choice
+        var mathLitIDs = mathLitSingleSnap.GetValue<List<string>>("IDs");
+        var mathLitSingleChoiceQuestions = mathLitSingleChoiceIDs
+            .Select(n => mathLitSingleSnap.GetValue<SingleChoiceQuestion>(mathLitIDs[n]))
+            .ToList();
 
-        List<SingleChoiceQuestion> Sub1SingleChoiceQuestions = new List<SingleChoiceQuestion>();
-        foreach (var n in Sub1SingleChoiceIDs)
-        {
-            string q = Sub1SingleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub1SingleChoiceQuestions.Add(Sub1SingleChoiceDoc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(q));
-        }
+        // Sub1
+        var sub1SingleIDs = sub1SingleSnap.GetValue<List<string>>("IDs");
+        var sub1MultipleIDs = sub1MultipleSnap.GetValue<List<string>>("IDs");
+        var sub1ContextIDs = sub1ContextSnap.GetValue<List<string>>("IDs");
+        var sub1MatchIDs_list = sub1MatchSnap.GetValue<List<string>>("IDs");
 
-        List<MultipleChoiceQuestion> Sub1MultipleChoiceQuestions = new List<MultipleChoiceQuestion>();
-        foreach (var n in Sub1MultipleChoiceIDs)
-        {
-            string q = Sub1MultipleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub1MultipleChoiceQuestions.Add(Sub1MultipleChoiceDoc.GetSnapshotAsync().Result.GetValue<MultipleChoiceQuestion>(q));
-        }
+        var sub1SingleChoiceQuestions = sub1SingleChoiceIDs
+            .Select(n => sub1SingleSnap.GetValue<SingleChoiceQuestion>(sub1SingleIDs[n]))
+            .ToList();
 
-        ContextQuestion Sub1ContextQuestion = Sub1ContextDoc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(Sub1ContextDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[Sub1ContextID]);
+        var sub1MultipleChoiceQuestions = sub1MultipleChoiceIDs
+            .Select(n => sub1MultipleSnap.GetValue<MultipleChoiceQuestion>(sub1MultipleIDs[n]))
+            .ToList();
 
-        List<MatchQuestion> Sub1MatchQuestions = new List<MatchQuestion>();
-        foreach (var n in Sub1MatchIDs)
-        {
-            string q = Sub1MatchDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub1MatchQuestions.Add(Sub1MatchDoc.GetSnapshotAsync().Result.GetValue<MatchQuestion>(q));
-        }
+        var sub1ContextQuestion = sub1ContextSnap.GetValue<ContextQuestion>(sub1ContextIDs[sub1ContextID]);
 
-        List<SingleChoiceQuestion> Sub2SingleChoiceQuestions = new List<SingleChoiceQuestion>();
-        foreach (var n in Sub2SingleChoiceIDs)
-        {
-            string q = Sub2SingleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub2SingleChoiceQuestions.Add(Sub2SingleChoiceDoc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(q));
-        }
+        var sub1MatchQuestions = sub1MatchIDs
+            .Select(n => sub1MatchSnap.GetValue<MatchQuestion>(sub1MatchIDs_list[n]))
+            .ToList();
 
-        List<MultipleChoiceQuestion> Sub2MultipleChoiceQuestions = new List<MultipleChoiceQuestion>();
-        foreach (var n in Sub2MultipleChoiceIDs)
-        {
-            string q = Sub2MultipleChoiceDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub2MultipleChoiceQuestions.Add(Sub2MultipleChoiceDoc.GetSnapshotAsync().Result.GetValue<MultipleChoiceQuestion>(q));
-        }
+        // Sub2
+        var sub2SingleIDs = sub2SingleSnap.GetValue<List<string>>("IDs");
+        var sub2MultipleIDs = sub2MultipleSnap.GetValue<List<string>>("IDs");
+        var sub2ContextIDs = sub2ContextSnap.GetValue<List<string>>("IDs");
+        var sub2MatchIDs_list = sub2MatchSnap.GetValue<List<string>>("IDs");
 
-        ContextQuestion Sub2ContextQuestion = Sub2ContextDoc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(Sub2ContextDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[Sub2ContextID]);
+        var sub2SingleChoiceQuestions = sub2SingleChoiceIDs
+            .Select(n => sub2SingleSnap.GetValue<SingleChoiceQuestion>(sub2SingleIDs[n]))
+            .ToList();
 
-        List<MatchQuestion> Sub2MatchQuestions = new List<MatchQuestion>();
-        foreach (var n in Sub2MatchIDs)
-        {
-            string q = Sub2MatchDoc.GetSnapshotAsync().Result.GetValue<List<string>>("IDs")[n];
-            Sub2MatchQuestions.Add(Sub2MatchDoc.GetSnapshotAsync().Result.GetValue<MatchQuestion>(q));
-        }
-        
-        Test test = new Test
+        var sub2MultipleChoiceQuestions = sub2MultipleChoiceIDs
+            .Select(n => sub2MultipleSnap.GetValue<MultipleChoiceQuestion>(sub2MultipleIDs[n]))
+            .ToList();
+
+        var sub2ContextQuestion = sub2ContextSnap.GetValue<ContextQuestion>(sub2ContextIDs[sub2ContextID]);
+
+        var sub2MatchQuestions = sub2MatchIDs
+            .Select(n => sub2MatchSnap.GetValue<MatchQuestion>(sub2MatchIDs_list[n]))
+            .ToList();
+
+        // ── 7. Собираем тест ──────────────────────────────────────────────────────
+        return new Test
         {
             KazakhHistory = new KazakhHistoryTest
             {
-                SingleChoiceQuestions = KzHisSingleChoiceQuestions,
-                ContextQuestions = KzHisContextQuestions
+                SingleChoiceQuestions = kzHisSingleChoiceQuestions,
+                ContextQuestions = kzHisContextQuestions
             },
             FunctionalLiteracy = new FunctionalLiteracyTest
             {
-                ContextQuestions = FuncLitContextQuestions
+                ContextQuestions = funcLitContextQuestions
             },
             MathematicalLiteracy = new MathematicalLiteracyTest
             {
-                SingleChoiceQuestions = MathLitSingleChoiceQuestions
+                SingleChoiceQuestions = mathLitSingleChoiceQuestions
             },
             SecondarySubject1 = new SecondarySubjectTest
             {
                 Subject = sub1,
-                SingleChoiceQuestions = Sub1SingleChoiceQuestions,
-                MultipleChoiceQuestions = Sub1MultipleChoiceQuestions,
-                ContextQuestion = Sub1ContextQuestion,
-                MatchQuestions = Sub1MatchQuestions
+                SingleChoiceQuestions = sub1SingleChoiceQuestions,
+                MultipleChoiceQuestions = sub1MultipleChoiceQuestions,
+                ContextQuestion = sub1ContextQuestion,
+                MatchQuestions = sub1MatchQuestions
             },
             SecondarySubject2 = new SecondarySubjectTest
             {
                 Subject = sub2,
-                SingleChoiceQuestions = Sub2SingleChoiceQuestions,
-                MultipleChoiceQuestions = Sub2MultipleChoiceQuestions,
-                ContextQuestion = Sub2ContextQuestion,
-                MatchQuestions = Sub2MatchQuestions
+                SingleChoiceQuestions = sub2SingleChoiceQuestions,
+                MultipleChoiceQuestions = sub2MultipleChoiceQuestions,
+                ContextQuestion = sub2ContextQuestion,
+                MatchQuestions = sub2MatchQuestions
             }
-            
         };
-
-        return test;
     }
-
     public async Task<TestAnswers> GetTestAnswersAsync(string studentId, Test test)
     {
-        //Get correct answers from Firesore for the given test
-        //Question id is in format Base-"Something random"
-
-        bool[,] KzHisSingleChoiceAnswers = new bool[10,4];
-        for (int i = 0; i < 10; i++)
+        static bool[,] FlatToMatrix(MatchQuestion q)
         {
-            string qId = test.KazakhHistory.SingleChoiceQuestions[i].Id;
-            //parse base number and question name in document
-            var doc = _db.Collection("KazakhHistory").Document("Single-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(qId);
-            for (int j = 0; j < 4; j++)
-            {
-                KzHisSingleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
+            int L = q.LeftSide.Count, R = q.RightSide.Count;
+            var matrix = new bool[L, R];
+            for (int r = 0; r < L; r++)
+                for (int c = 0; c < R; c++)
+                    matrix[r, c] = q.CorrectMatches[r * R + c];
+            return matrix;
         }
 
-        List<bool[,]> KzHisContextAnswers = new List<bool[,]>();
-        for (int i = 0; i < 2; i++)
+        static bool[,] SingleChoiceMatrix(List<SingleChoiceQuestion> questions)
         {
-            string qId = test.KazakhHistory.ContextQuestions[i].Id;
-            var doc = _db.Collection("KazakhHistory").Document("Context-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(qId);
-            bool[,] contextAnswers = new bool[5,4];
-            for (int j = 0; j < question.Questions.Count; j++)
+            var result = new bool[questions.Count, 4];
+            for (int i = 0; i < questions.Count; i++)
+                for (int j = 0; j < 4; j++)
+                    result[i, j] = questions[i].Options[j].IsCorrect;
+            return result;
+        }
+
+        static bool[,] MultipleChoiceMatrix(List<MultipleChoiceQuestion> questions)
+        {
+            var result = new bool[questions.Count, 6];
+            for (int i = 0; i < questions.Count; i++)
+                for (int j = 0; j < 6; j++)
+                    result[i, j] = questions[i].Options[j].IsCorrect;
+            return result;
+        }
+
+        static List<bool[,]> ContextMatrixList(List<ContextQuestion> questions)
+        {
+            var result = new List<bool[,]>();
+            foreach (var ctx in questions)
             {
+                var matrix = new bool[ctx.Questions.Count, 4];
+                for (int j = 0; j < ctx.Questions.Count; j++)
+                    for (int k = 0; k < 4; k++)
+                        matrix[j, k] = ctx.Questions[j].Options[k].IsCorrect;
+                result.Add(matrix);
+            }
+            return result;
+        }
+
+        static bool[,] ContextMatrix(ContextQuestion ctx)
+        {
+            var matrix = new bool[ctx.Questions.Count, 4];
+            for (int j = 0; j < ctx.Questions.Count; j++)
                 for (int k = 0; k < 4; k++)
-                {
-                    contextAnswers[j, k] = question.Questions[j].Options[k].IsCorrect;
-                }
-            }
-            KzHisContextAnswers.Add(contextAnswers);
+                    matrix[j, k] = ctx.Questions[j].Options[k].IsCorrect;
+            return matrix;
         }
 
-        List<bool[,]> FuncLitContextAnswers = new List<bool[,]>();
-        for (int i = 0; i < test.FunctionalLiteracy.ContextQuestions.Count; i++)
+        string sub1 = test.SecondarySubject1.Subject.ToString();
+        string sub2 = test.SecondarySubject2.Subject.ToString();
+
+        // ── 1. Fetch all Metadata in parallel ────────────────────────────────────
+        var metaSnaps = await Task.WhenAll(
+            _db.Collection("KazakhstanHistory").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection("FunctionalLiteracy").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection("MathematicalLiteracy").Document("Metadata").GetSnapshotAsync(),
+            _db.Collection(sub1).Document("Metadata").GetSnapshotAsync(),
+            _db.Collection(sub2).Document("Metadata").GetSnapshotAsync()
+        );
+
+        int kzHisBaseSize = metaSnaps[0].GetValue<int>("BaseSize");
+        int funcLitBaseSize = metaSnaps[1].GetValue<int>("BaseSize");
+        int mathLitBaseSize = metaSnaps[2].GetValue<int>("BaseSize");
+        int sub1BaseSize = metaSnaps[3].GetValue<int>("BaseSize");
+        int sub2BaseSize = metaSnaps[4].GetValue<int>("BaseSize");
+
+        // ── 2. Helper: fetch all docs of a type and find the one containing our ID ─
+        async Task<DocumentSnapshot> FindBaseDoc(string collection, string type, int baseSize, string targetId)
         {
-            string qId = test.FunctionalLiteracy.ContextQuestions[i].Id;
-            var doc = _db.Collection("FunctionalLiteracy").Document("Context-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(qId);
-            bool[,] contextAnswers = new bool[question.Questions.Count,4];
-            for (int j = 0; j < question.Questions.Count; j++)
+            var tasks = Enumerable.Range(1, baseSize)
+                .Select(i => _db.Collection(collection).Document($"{type}-{i}").GetSnapshotAsync());
+            var snaps = await Task.WhenAll(tasks);
+            return snaps.First(s =>
             {
-                for (int k = 0; k < 4; k++)
-                {
-                    contextAnswers[j, k] = question.Questions[j].Options[k].IsCorrect;
-                }
-            }
-            FuncLitContextAnswers.Add(contextAnswers);
+                var ids = s.GetValue<List<string>>("IDs");
+                return ids != null && ids.Contains(targetId);
+            });
         }
 
-        bool[,] MathLitSingleChoiceAnswers = new bool[10,4];
-        for (int i = 0; i < 10; i++)
+        // ── 3. Find base documents for each section in parallel ───────────────────
+        var findTasks = await Task.WhenAll(
+            FindBaseDoc("KazakhstanHistory", "Single", kzHisBaseSize, test.KazakhHistory.SingleChoiceQuestions[0].Id),
+            FindBaseDoc("KazakhstanHistory", "Context", kzHisBaseSize, test.KazakhHistory.ContextQuestions[0].Id),
+            FindBaseDoc("FunctionalLiteracy", "Context", funcLitBaseSize, test.FunctionalLiteracy.ContextQuestions[0].Id),
+            FindBaseDoc("MathematicalLiteracy", "Single", mathLitBaseSize, test.MathematicalLiteracy.SingleChoiceQuestions[0].Id),
+            FindBaseDoc(sub1, "Single", sub1BaseSize, test.SecondarySubject1.SingleChoiceQuestions[0].Id),
+            FindBaseDoc(sub1, "Multiple", sub1BaseSize, test.SecondarySubject1.MultipleChoiceQuestions[0].Id),
+            FindBaseDoc(sub1, "Context", sub1BaseSize, test.SecondarySubject1.ContextQuestion.Id),
+            FindBaseDoc(sub1, "Match", sub1BaseSize, test.SecondarySubject1.MatchQuestions[0].Id),
+            FindBaseDoc(sub2, "Single", sub2BaseSize, test.SecondarySubject2.SingleChoiceQuestions[0].Id),
+            FindBaseDoc(sub2, "Multiple", sub2BaseSize, test.SecondarySubject2.MultipleChoiceQuestions[0].Id),
+            FindBaseDoc(sub2, "Context", sub2BaseSize, test.SecondarySubject2.ContextQuestion.Id),
+            FindBaseDoc(sub2, "Match", sub2BaseSize, test.SecondarySubject2.MatchQuestions[0].Id)
+        );
+
+        var kzHisSingleSnap = findTasks[0];
+        var kzHisContextSnap = findTasks[1];
+        var funcLitContextSnap = findTasks[2];
+        var mathLitSingleSnap = findTasks[3];
+        var sub1SingleSnap = findTasks[4];
+        var sub1MultipleSnap = findTasks[5];
+        var sub1ContextSnap = findTasks[6];
+        var sub1MatchSnap = findTasks[7];
+        var sub2SingleSnap = findTasks[8];
+        var sub2MultipleSnap = findTasks[9];
+        var sub2ContextSnap = findTasks[10];
+        var sub2MatchSnap = findTasks[11];
+
+        // ── 4. Read real answers from Firestore by question ID ────────────────────
+        var kzHisSingleQuestions = test.KazakhHistory.SingleChoiceQuestions
+            .Select(q => kzHisSingleSnap.GetValue<SingleChoiceQuestion>(q.Id)).ToList();
+
+        var kzHisContextQuestions = test.KazakhHistory.ContextQuestions
+            .Select(q => kzHisContextSnap.GetValue<ContextQuestion>(q.Id)).ToList();
+
+        var funcLitContextQuestions = test.FunctionalLiteracy.ContextQuestions
+    .Select(q =>
+    {
+        var full = funcLitContextSnap.GetValue<ContextQuestion>(q.Id);
+        return new ContextQuestion
         {
-            string qId = test.MathematicalLiteracy.SingleChoiceQuestions[i].Id;
-            var doc = _db.Collection("MathematicalLiteracy").Document("Single-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(qId);
-            for (int j = 0; j < 4; j++)
-            {
-                MathLitSingleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
-        }
+            Id = full.Id,
+            Subject = full.Subject,
+            ContextText = full.ContextText,
+            ContextImageLink = full.ContextImageLink,
+            Questions = full.Questions.Take(q.Questions.Count).ToList() // trim to match submitted
+        };
+    }).ToList();
 
-        bool[,] Sub1SingleChoiceAnswers = new bool[25,4];
-        for (int i = 0; i < 25; i++)
-        {
-            string qId = test.SecondarySubject1.SingleChoiceQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject1.Subject.ToString()).Document("Single-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(qId);
-            for (int j = 0; j < 4; j++)
-            {
-                Sub1SingleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
-        }
+        var mathLitSingleQuestions = test.MathematicalLiteracy.SingleChoiceQuestions
+            .Select(q => mathLitSingleSnap.GetValue<SingleChoiceQuestion>(q.Id)).ToList();
 
-        bool[,] Sub1MultipleChoiceAnswers = new bool[5,6];
-        for (int i = 0; i < 5; i++)
-        {
-            string qId = test.SecondarySubject1.MultipleChoiceQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject1.Subject.ToString()).Document("Multiple-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<MultipleChoiceQuestion>(qId);
-            for (int j = 0; j < 6; j++)
-            {
-                Sub1MultipleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
-        }
+        var sub1SingleQuestions = test.SecondarySubject1.SingleChoiceQuestions
+            .Select(q => sub1SingleSnap.GetValue<SingleChoiceQuestion>(q.Id)).ToList();
 
-        bool[,] Sub1ContextAnswers = new bool[5,4];
-        {
-            string qId = test.SecondarySubject1.ContextQuestion.Id;
-            var doc = _db.Collection(test.SecondarySubject1.Subject.ToString()).Document("Context-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(qId);
-            for (int j = 0; j < question.Questions.Count; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    Sub1ContextAnswers[j, k] = question.Questions[j].Options[k].IsCorrect;
-                }
-            }
-        }
+        var sub1MultipleQuestions = test.SecondarySubject1.MultipleChoiceQuestions
+            .Select(q => sub1MultipleSnap.GetValue<MultipleChoiceQuestion>(q.Id)).ToList();
 
-        List<bool[,]> Sub1MatchAnswers = new List<bool[,]>();
-        for (int i = 0; i < 5; i++)
-        {
-            string qId = test.SecondarySubject1.MatchQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject1.Subject.ToString()).Document("Match-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<MatchQuestion>(qId);
-            
-            Sub1MatchAnswers.Add(question.CorrectMatches);
-        }
+        var sub1ContextQuestion = sub1ContextSnap
+            .GetValue<ContextQuestion>(test.SecondarySubject1.ContextQuestion.Id);
 
-        bool[,] Sub2SingleChoiceAnswers = new bool[25,4];
-        for (int i = 0; i < 25; i++)
-        {
-            string qId = test.SecondarySubject2.SingleChoiceQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject2.Subject.ToString()).Document("Single-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<SingleChoiceQuestion>(qId);
-            for (int j = 0; j < 4; j++)
-            {
-                Sub2SingleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
-        }
+        var sub1MatchQuestions = test.SecondarySubject1.MatchQuestions
+            .Select(q => sub1MatchSnap.GetValue<MatchQuestion>(q.Id)).ToList();
 
-        bool[,] Sub2MultipleChoiceAnswers = new bool[5,6];
-        for (int i = 0; i < 5; i++)
-        {
-            string qId = test.SecondarySubject2.MultipleChoiceQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject2.Subject.ToString()).Document("Multiple-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<MultipleChoiceQuestion>(qId);
-            for (int j = 0; j < 6; j++)
-            {
-                Sub2MultipleChoiceAnswers[i, j] = question.Options[j].IsCorrect;
-            }
-        }
+        var sub2SingleQuestions = test.SecondarySubject2.SingleChoiceQuestions
+            .Select(q => sub2SingleSnap.GetValue<SingleChoiceQuestion>(q.Id)).ToList();
 
-        bool[,] Sub2ContextAnswers = new bool[5,4];
-        {
-            string qId = test.SecondarySubject2.ContextQuestion.Id;
-            var doc = _db.Collection(test.SecondarySubject2.Subject.ToString()).Document("Context-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<ContextQuestion>(qId);
-            for (int j = 0; j < question.Questions.Count; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    Sub2ContextAnswers[j, k] = question.Questions[j].Options[k].IsCorrect;
-                }
-            }
-        }
+        var sub2MultipleQuestions = test.SecondarySubject2.MultipleChoiceQuestions
+            .Select(q => sub2MultipleSnap.GetValue<MultipleChoiceQuestion>(q.Id)).ToList();
 
-        List<bool[,]> Sub2MatchAnswers = new List<bool[,]>();
-        for (int i = 0; i < 5; i++)
-        {
-            string qId = test.SecondarySubject2.MatchQuestions[i].Id;
-            var doc = _db.Collection(test.SecondarySubject2.Subject.ToString()).Document("Match-" + qId.Split("-")[0]);
-            var question = doc.GetSnapshotAsync().Result.GetValue<MatchQuestion>(qId);
-            
-            Sub2MatchAnswers.Add(question.CorrectMatches);
-        }
+        var sub2ContextQuestion = sub2ContextSnap
+            .GetValue<ContextQuestion>(test.SecondarySubject2.ContextQuestion.Id);
 
-        TestAnswers answers = new TestAnswers
+        var sub2MatchQuestions = test.SecondarySubject2.MatchQuestions
+            .Select(q => sub2MatchSnap.GetValue<MatchQuestion>(q.Id)).ToList();
+
+        // ── 5. Build answer matrices ──────────────────────────────────────────────
+        return new TestAnswers
         {
             KazakhHistoryAnswers = new KazakhHistoryTestAnswers
             {
-                SingleChoiceAnswers = KzHisSingleChoiceAnswers,
-                ContextAnswers = KzHisContextAnswers
+                SingleChoiceAnswers = SingleChoiceMatrix(kzHisSingleQuestions),
+                ContextAnswers = ContextMatrixList(kzHisContextQuestions)
             },
             FunctionalLiteracyAnswers = new FunctionalLiteracyTestAnswers
             {
-                ContextAnswers = FuncLitContextAnswers
+                ContextAnswers = ContextMatrixList(funcLitContextQuestions)
             },
             MathematicalLiteracyAnswers = new MathematicalLiteracyTestAnswers
             {
-                SingleChoiceAnswers = MathLitSingleChoiceAnswers
+                SingleChoiceAnswers = SingleChoiceMatrix(mathLitSingleQuestions)
             },
             SecondarySubject1Answers = new SecondarySubjectTestAnswers
             {
-                SingleChoiceAnswers = Sub1SingleChoiceAnswers,
-                MultipleChoiceAnswers = Sub1MultipleChoiceAnswers,
-                ContextAnswers = Sub1ContextAnswers,
-                MatchAnswers = Sub1MatchAnswers
+                SingleChoiceAnswers = SingleChoiceMatrix(sub1SingleQuestions),
+                MultipleChoiceAnswers = MultipleChoiceMatrix(sub1MultipleQuestions),
+                ContextAnswers = ContextMatrix(sub1ContextQuestion),
+                MatchAnswers = sub1MatchQuestions.Select(q => FlatToMatrix(q)).ToList()
             },
             SecondarySubject2Answers = new SecondarySubjectTestAnswers
             {
-                SingleChoiceAnswers = Sub2SingleChoiceAnswers,
-                MultipleChoiceAnswers = Sub2MultipleChoiceAnswers,
-                ContextAnswers = Sub2ContextAnswers,
-                MatchAnswers = Sub2MatchAnswers
+                SingleChoiceAnswers = SingleChoiceMatrix(sub2SingleQuestions),
+                MultipleChoiceAnswers = MultipleChoiceMatrix(sub2MultipleQuestions),
+                ContextAnswers = ContextMatrix(sub2ContextQuestion),
+                MatchAnswers = sub2MatchQuestions.Select(q => FlatToMatrix(q)).ToList()
             }
         };
-
-        return answers;
     }
-
     public async Task<List<GroupPublic>> GetStudentGroups(string studentId)
     {
         var snap = await _db.Collection("Students")
@@ -547,6 +568,7 @@ public class StudentRepo: IStudentReader, IStudentWriter
     public async Task SubmitTestAsync(string studentId, TestResult testResult)
     {
         await _context.TestResults.AddAsync(testResult);
+        await _context.SaveChangesAsync();
         await _db.Collection("Students").Document(studentId).UpdateAsync("LastTimeTest", DateTime.UtcNow);
         //in document there is TestResults array, add new test result to it
         await _db.Collection("Students").Document(studentId).UpdateAsync("TestResults", FieldValue.ArrayUnion(testResult));
@@ -557,309 +579,252 @@ public class StudentCalculator: IStudentCalculator
 {
     public async Task<TestAnswers> GetStudentAnswersAsync(string studentId, Test test)
     {
-        TestAnswers answers = new TestAnswers
+        // ── Вспомогательный метод: CorrectMatchesFlat → bool[,] ──────────────────
+        // FIX: CorrectMatches удалено, читаем CorrectMatchesFlat
+        static bool[,] FlatToMatrix(MatchQuestion q)
+        {
+            int L = q.LeftSide.Count;
+            int R = q.RightSide.Count;
+            var matrix = new bool[L, R];
+            for (int r = 0; r < L; r++)
+                for (int c = 0; c < R; c++)
+                    matrix[r, c] = q.CorrectMatches[r * R + c];
+            return matrix;
+        }
+
+        // ── KazakhHistory — SingleChoice ──────────────────────────────────────────
+        var kzHisSingle = new bool[test.KazakhHistory.SingleChoiceQuestions.Count, 4];
+        for (int i = 0; i < test.KazakhHistory.SingleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 4; j++)
+                kzHisSingle[i, j] = test.KazakhHistory.SingleChoiceQuestions[i].Options[j].IsCorrect;
+
+        // ── KazakhHistory — Context ───────────────────────────────────────────────
+        // FIX: в оригинале List инициализирован пустым, но затем индексируется [i] —
+        //      IndexOutOfRangeException. Нужно добавлять матрицу в список через Add().
+        var kzHisContext = new List<bool[,]>();
+        for (int i = 0; i < test.KazakhHistory.ContextQuestions.Count; i++)
+        {
+            var ctx = test.KazakhHistory.ContextQuestions[i];
+            var matrix = new bool[ctx.Questions.Count, 4];
+            for (int j = 0; j < ctx.Questions.Count; j++)
+                for (int k = 0; k < 4; k++)
+                    matrix[j, k] = ctx.Questions[j].Options[k].IsCorrect;
+            kzHisContext.Add(matrix);
+        }
+
+        // ── FunctionalLiteracy — Context ──────────────────────────────────────────
+        // FIX: та же проблема — Add() вместо прямого индексирования
+        var funcLitContext = new List<bool[,]>();
+        for (int i = 0; i < test.FunctionalLiteracy.ContextQuestions.Count; i++)
+        {
+            var ctx = test.FunctionalLiteracy.ContextQuestions[i];
+            var matrix = new bool[ctx.Questions.Count, 4];
+            for (int j = 0; j < ctx.Questions.Count; j++)
+                for (int k = 0; k < 4; k++)
+                    matrix[j, k] = ctx.Questions[j].Options[k].IsCorrect;
+            funcLitContext.Add(matrix);
+        }
+
+        // ── MathematicalLiteracy — SingleChoice ───────────────────────────────────
+        var mathLitSingle = new bool[test.MathematicalLiteracy.SingleChoiceQuestions.Count, 4];
+        for (int i = 0; i < test.MathematicalLiteracy.SingleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 4; j++)
+                mathLitSingle[i, j] = test.MathematicalLiteracy.SingleChoiceQuestions[i].Options[j].IsCorrect;
+
+        // ── SecondarySubject1 ─────────────────────────────────────────────────────
+        var sub1Single = new bool[test.SecondarySubject1.SingleChoiceQuestions.Count, 4];
+        for (int i = 0; i < test.SecondarySubject1.SingleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 4; j++)
+                sub1Single[i, j] = test.SecondarySubject1.SingleChoiceQuestions[i].Options[j].IsCorrect;
+
+        var sub1Multiple = new bool[test.SecondarySubject1.MultipleChoiceQuestions.Count, 6];
+        for (int i = 0; i < test.SecondarySubject1.MultipleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 6; j++)
+                sub1Multiple[i, j] = test.SecondarySubject1.MultipleChoiceQuestions[i].Options[j].IsCorrect;
+
+        var sub1CtxQ = test.SecondarySubject1.ContextQuestion;
+        var sub1Context = new bool[sub1CtxQ.Questions.Count, 4];
+        for (int j = 0; j < sub1CtxQ.Questions.Count; j++)
+            for (int k = 0; k < 4; k++)
+                sub1Context[j, k] = sub1CtxQ.Questions[j].Options[k].IsCorrect;
+
+        // FIX: CorrectMatches → FlatToMatrix; Add() вместо индексирования пустого списка;
+        //      размеры матрицы берутся из реальных данных, не захардкожены как [2,4]
+        var sub1Match = test.SecondarySubject1.MatchQuestions
+            .Select(q => FlatToMatrix(q))
+            .ToList();
+
+        // ── SecondarySubject2 ─────────────────────────────────────────────────────
+        var sub2Single = new bool[test.SecondarySubject2.SingleChoiceQuestions.Count, 4];
+        for (int i = 0; i < test.SecondarySubject2.SingleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 4; j++)
+                sub2Single[i, j] = test.SecondarySubject2.SingleChoiceQuestions[i].Options[j].IsCorrect;
+
+        var sub2Multiple = new bool[test.SecondarySubject2.MultipleChoiceQuestions.Count, 6];
+        for (int i = 0; i < test.SecondarySubject2.MultipleChoiceQuestions.Count; i++)
+            for (int j = 0; j < 6; j++)
+                sub2Multiple[i, j] = test.SecondarySubject2.MultipleChoiceQuestions[i].Options[j].IsCorrect;
+
+        var sub2CtxQ = test.SecondarySubject2.ContextQuestion;
+        var sub2Context = new bool[sub2CtxQ.Questions.Count, 4];
+        for (int j = 0; j < sub2CtxQ.Questions.Count; j++)
+            for (int k = 0; k < 4; k++)
+                sub2Context[j, k] = sub2CtxQ.Questions[j].Options[k].IsCorrect;
+
+        var sub2Match = test.SecondarySubject2.MatchQuestions
+            .Select(q => FlatToMatrix(q))
+            .ToList();
+
+        // ── Сборка ────────────────────────────────────────────────────────────────
+        return new TestAnswers
         {
             KazakhHistoryAnswers = new KazakhHistoryTestAnswers
             {
-                SingleChoiceAnswers = new bool[10, 4],
-                ContextAnswers = new List<bool[,]>()
+                SingleChoiceAnswers = kzHisSingle,
+                ContextAnswers = kzHisContext
             },
             FunctionalLiteracyAnswers = new FunctionalLiteracyTestAnswers
             {
-                ContextAnswers = new List<bool[,]>()
+                ContextAnswers = funcLitContext
             },
             MathematicalLiteracyAnswers = new MathematicalLiteracyTestAnswers
             {
-                SingleChoiceAnswers = new bool[10, 4]
+                SingleChoiceAnswers = mathLitSingle
             },
             SecondarySubject1Answers = new SecondarySubjectTestAnswers
             {
-                SingleChoiceAnswers = new bool[25, 4],
-                MultipleChoiceAnswers = new bool[5, 6],
-                ContextAnswers = new bool[5, 4],
-                MatchAnswers = new List<bool[,]>()
+                SingleChoiceAnswers = sub1Single,
+                MultipleChoiceAnswers = sub1Multiple,
+                ContextAnswers = sub1Context,
+                MatchAnswers = sub1Match
             },
             SecondarySubject2Answers = new SecondarySubjectTestAnswers
             {
-                SingleChoiceAnswers = new bool[25, 4],
-                MultipleChoiceAnswers = new bool[5, 6],
-                ContextAnswers = new bool[5, 4],
-                MatchAnswers = new List<bool[,]>()
+                SingleChoiceAnswers = sub2Single,
+                MultipleChoiceAnswers = sub2Multiple,
+                ContextAnswers = sub2Context,
+                MatchAnswers = sub2Match
             }
         };
-        for (int i = 0; i < test.KazakhHistory.SingleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                answers.KazakhHistoryAnswers.SingleChoiceAnswers[i, j] = test.KazakhHistory.SingleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.KazakhHistory.ContextQuestions.Count; i++)
-        {
-            for (int j = 0; j < 5; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    answers.KazakhHistoryAnswers.ContextAnswers[i][j, k] = test.KazakhHistory.ContextQuestions[i].Questions[j].Options[k].IsCorrect;
-                }
-            }
-        }
-
-        for (int i = 0; i < test.FunctionalLiteracy.ContextQuestions.Count; i++)
-        {
-            for (int j = 0; j < test.FunctionalLiteracy.ContextQuestions[i].Questions.Count; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    answers.FunctionalLiteracyAnswers.ContextAnswers[i][j, k] = test.FunctionalLiteracy.ContextQuestions[i].Questions[j].Options[k].IsCorrect;
-                }
-            }
-        }
-
-        for (int i = 0; i < test.MathematicalLiteracy.SingleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                answers.MathematicalLiteracyAnswers.SingleChoiceAnswers[i, j] = test.MathematicalLiteracy.SingleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject1.SingleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                answers.SecondarySubject1Answers.SingleChoiceAnswers[i, j] = test.SecondarySubject1.SingleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject1.MultipleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                answers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j] = test.SecondarySubject1.MultipleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int j = 0; j < 5; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                answers.SecondarySubject1Answers.ContextAnswers[j, k] = test.SecondarySubject1.ContextQuestion.Questions[j].Options[k].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject2.SingleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                answers.SecondarySubject2Answers.SingleChoiceAnswers[i, j] = test.SecondarySubject2.SingleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject2.MultipleChoiceQuestions.Count; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                answers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j] = test.SecondarySubject2.MultipleChoiceQuestions[i].Options[j].IsCorrect;
-            }
-        }
-
-        for (int j = 0; j < 5; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                answers.SecondarySubject2Answers.ContextAnswers[j, k] = test.SecondarySubject2.ContextQuestion.Questions[j].Options[k].IsCorrect;
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject1.MatchQuestions.Count; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    answers.SecondarySubject1Answers.MatchAnswers[i][j, k] = test.SecondarySubject1.MatchQuestions[i].CorrectMatches[j, k];
-                }
-            }
-        }
-
-        for (int i = 0; i < test.SecondarySubject2.MatchQuestions.Count; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
-                    answers.SecondarySubject2Answers.MatchAnswers[i][j, k] = test.SecondarySubject2.MatchQuestions[i].CorrectMatches[j, k];
-                }
-            }
-        }
-
-        return answers;
     }
-
-    public async Task<TestResult> CalculateTestResultAsync(string studentId, 
-                                            TestAnswers studentAnswers, 
-                                            TestAnswers testAnswers, 
-                                            Subject SecondarySubject1, 
-                                            Subject SecondarySubject2)
+    public async Task<TestResult> CalculateTestResultAsync(string studentId,
+                                        TestAnswers studentAnswers,
+                                        TestAnswers testAnswers,
+                                        Subject SecondarySubject1,
+                                        Subject SecondarySubject2)
     {
-        //Calculation logic: Compare booleans and assign scores
-        //Kazakh History
         int kazakhHistoryScore = 20;
-        for (int i = 0; i < 10; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
+        for (int i = 0; i < testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers.GetLength(0); i++)
+            for (int j = 0; j < testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers.GetLength(1); j++)
                 if (studentAnswers.KazakhHistoryAnswers.SingleChoiceAnswers[i, j] != testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers[i, j])
-                {
-                    kazakhHistoryScore -= 1;
-                }
-            }
-        }
+                    kazakhHistoryScore--;
 
-        for (int i = 0; i < 2; i++)
-        {
-            for (int j = 0; j < 5; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
+        for (int i = 0; i < testAnswers.KazakhHistoryAnswers.ContextAnswers.Count; i++)
+            for (int j = 0; j < testAnswers.KazakhHistoryAnswers.ContextAnswers[i].GetLength(0); j++)
+                for (int k = 0; k < testAnswers.KazakhHistoryAnswers.ContextAnswers[i].GetLength(1); k++)
                     if (studentAnswers.KazakhHistoryAnswers.ContextAnswers[i][j, k] != testAnswers.KazakhHistoryAnswers.ContextAnswers[i][j, k])
-                    {
-                        kazakhHistoryScore -= 1;
-                    }
-                }
-            }
-        }
+                        kazakhHistoryScore--;
 
-        //Functional Literacy
         int functionalScore = 10;
         for (int i = 0; i < testAnswers.FunctionalLiteracyAnswers.ContextAnswers.Count; i++)
-        {
             for (int j = 0; j < testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i].GetLength(0); j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
+                for (int k = 0; k < testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i].GetLength(1); k++)
                     if (studentAnswers.FunctionalLiteracyAnswers.ContextAnswers[i][j, k] != testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i][j, k])
-                    {
-                        functionalScore -= 1;
-                    }
-                }
-            }
-        }
+                        functionalScore--;
 
-        //Mathematical Literacy
         int mathLitScore = 10;
-        for (int i = 0; i < 10; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
+        for (int i = 0; i < testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers.GetLength(0); i++)
+            for (int j = 0; j < testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers.GetLength(1); j++)
                 if (studentAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers[i, j] != testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers[i, j])
-                {
-                    mathLitScore -= 1;
-                }
-            }
-        }
+                    mathLitScore--;
 
-        //Secondary Subject 1
         int sec1Score = 50;
-        for (int i = 0; i < 25; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
+        for (int i = 0; i < testAnswers.SecondarySubject1Answers.SingleChoiceAnswers.GetLength(0); i++)
+            for (int j = 0; j < testAnswers.SecondarySubject1Answers.SingleChoiceAnswers.GetLength(1); j++)
                 if (studentAnswers.SecondarySubject1Answers.SingleChoiceAnswers[i, j] != testAnswers.SecondarySubject1Answers.SingleChoiceAnswers[i, j])
-                {
-                    sec1Score -= 1;
-                }
-            }
-        }
-        
-        for (int i = 0; i < 5; i++)
+                    sec1Score--;
+
+        for (int i = 0; i < testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers.GetLength(0); i++)
         {
-            for (int j = 0; j < 6; j++)
+            int mismatches = 0;
+            int correctCount = 0;
+            bool studentFoundCorrect = false;
+
+            for (int j = 0; j < testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers.GetLength(1); j++)
             {
-                if (studentAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j] != testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j])
-                {
-                    sec1Score -= 1;
-                }
+                bool isCorrect = testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j];
+                bool studentSelected = studentAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j];
+
+                if (isCorrect) correctCount++;
+                if (isCorrect && studentSelected) studentFoundCorrect = true;
+                if (isCorrect != studentSelected) mismatches++;
             }
+
+            if (mismatches == 0) continue;
+
+            if (correctCount == 1 && !studentFoundCorrect)
+                sec1Score -= 2;
+            else if (mismatches == 1)
+                sec1Score -= 1;
+            else
+                sec1Score -= 2;
         }
 
-        for (int j = 0; j < 5; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
+        for (int j = 0; j < testAnswers.SecondarySubject1Answers.ContextAnswers.GetLength(0); j++)
+            for (int k = 0; k < testAnswers.SecondarySubject1Answers.ContextAnswers.GetLength(1); k++)
                 if (studentAnswers.SecondarySubject1Answers.ContextAnswers[j, k] != testAnswers.SecondarySubject1Answers.ContextAnswers[j, k])
-                {
-                    sec1Score -= 1;
-                }
-            }
-        }
+                    sec1Score--;
 
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
+        for (int i = 0; i < testAnswers.SecondarySubject1Answers.MatchAnswers.Count; i++)
+            for (int j = 0; j < testAnswers.SecondarySubject1Answers.MatchAnswers[i].GetLength(0); j++)
+                for (int k = 0; k < testAnswers.SecondarySubject1Answers.MatchAnswers[i].GetLength(1); k++)
                     if (studentAnswers.SecondarySubject1Answers.MatchAnswers[i][j, k] != testAnswers.SecondarySubject1Answers.MatchAnswers[i][j, k])
-                    {
-                        sec1Score -= 1;
-                    }
-                }
-            }
-        }
+                        sec1Score--;
 
-        //Secondary Subject 2
         int sec2Score = 50;
-        for (int i = 0; i < 25; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
+        for (int i = 0; i < testAnswers.SecondarySubject2Answers.SingleChoiceAnswers.GetLength(0); i++)
+            for (int j = 0; j < testAnswers.SecondarySubject2Answers.SingleChoiceAnswers.GetLength(1); j++)
                 if (studentAnswers.SecondarySubject2Answers.SingleChoiceAnswers[i, j] != testAnswers.SecondarySubject2Answers.SingleChoiceAnswers[i, j])
-                {
-                    sec2Score -= 1;
-                }
-            }
-        }
-        
-        for (int i = 0; i < 5; i++)
+                    sec2Score--;
+
+        for (int i = 0; i < testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers.GetLength(0); i++)
         {
-            for (int j = 0; j < 6; j++)
+            int mismatches = 0;
+            int correctCount = 0;
+            bool studentFoundCorrect = false;
+
+            for (int j = 0; j < testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers.GetLength(1); j++)
             {
-                if (studentAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j] != testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j])
-                {
-                    sec2Score -= 1;
-                }
+                bool isCorrect = testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j];
+                bool studentSelected = studentAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j];
+
+                if (isCorrect) correctCount++;
+                if (isCorrect && studentSelected) studentFoundCorrect = true;
+                if (isCorrect != studentSelected) mismatches++;
             }
+
+            if (mismatches == 0) continue;
+
+            if (correctCount == 1 && !studentFoundCorrect)
+                sec2Score -= 2;
+            else if (mismatches == 1)
+                sec2Score -= 1;
+            else
+                sec2Score -= 2;
         }
 
-        for (int j = 0; j < 5; j++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
+        for (int j = 0; j < testAnswers.SecondarySubject2Answers.ContextAnswers.GetLength(0); j++)
+            for (int k = 0; k < testAnswers.SecondarySubject2Answers.ContextAnswers.GetLength(1); k++)
                 if (studentAnswers.SecondarySubject2Answers.ContextAnswers[j, k] != testAnswers.SecondarySubject2Answers.ContextAnswers[j, k])
-                {
-                    sec2Score -= 1;
-                }
-            }
-        }
+                    sec2Score--;
 
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                for (int k = 0; k < 4; k++)
-                {
+        for (int i = 0; i < testAnswers.SecondarySubject2Answers.MatchAnswers.Count; i++)
+            for (int j = 0; j < testAnswers.SecondarySubject2Answers.MatchAnswers[i].GetLength(0); j++)
+                for (int k = 0; k < testAnswers.SecondarySubject2Answers.MatchAnswers[i].GetLength(1); k++)
                     if (studentAnswers.SecondarySubject2Answers.MatchAnswers[i][j, k] != testAnswers.SecondarySubject2Answers.MatchAnswers[i][j, k])
-                    {
-                        sec2Score -= 1;
-                    }
-                }
-            }
-        }
+                        sec2Score--;
 
-        TestResult result = new TestResult
+        return new TestResult
         {
             StudentId = studentId,
             TakenAt = DateTime.UtcNow,
@@ -872,6 +837,5 @@ public class StudentCalculator: IStudentCalculator
             SecondarySubject2Score = sec2Score,
             TotalScore = kazakhHistoryScore + functionalScore + mathLitScore + sec1Score + sec2Score
         };
-        return result;
     }
 }

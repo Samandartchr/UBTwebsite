@@ -1,4 +1,4 @@
-using API.Domain.Entities.QuestionTypes;
+﻿using API.Domain.Entities.QuestionTypes;
 using API.Domain.Enums.Subject;
 
 namespace API.Domain.Rules.QuestionRules;
@@ -38,13 +38,16 @@ public static class QuestionValidator
         return true;
     }
 
-    public static bool isMatchQuestionValid(MatchQuestion question)
+    public static bool IsMatchQuestionValid(MatchQuestion question)
     {
-        if (string.IsNullOrEmpty(question.Text) && string.IsNullOrEmpty(question.ImageLink)) {return false;}
-        else if (question.LeftSide.Count != 2){return false;}
-        else if (question.RightSide.Count != 4){return false;}
-        if (question.CorrectMatches.GetLength(0) != 2) return false;
-        if (question.CorrectMatches.GetLength(1) != 4) return false;
+        if (string.IsNullOrEmpty(question.Text) && string.IsNullOrEmpty(question.ImageLink)) return false;
+        if (question.LeftSide == null || question.LeftSide.Count != 2) return false;
+        if (question.RightSide == null || question.RightSide.Count != 4) return false;
+
+        // FIX: CorrectMatches (bool[,]) удалено — в Firestore хранится CorrectMatchesFlat (List<bool>)
+        // Плоский массив для матрицы 2×4 должен содержать ровно 2*4 = 8 элементов
+        if (question.CorrectMatches == null || question.CorrectMatches.Count != 2 * 4) return false;
+
         return true;
     }
 }

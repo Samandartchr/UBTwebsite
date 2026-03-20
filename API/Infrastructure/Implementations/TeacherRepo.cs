@@ -123,16 +123,8 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
         var GrDoc = _db.Collection("Groups").Document(groupId);
         var StDoc = _db.Collection("Students").Document(studentId);
 
-        //Remove an element of array in group document, the array is "Students", which contains Ids of students
-        await GrDoc.UpdateAsync("Students", FieldValue.ArrayRemove(new Dictionary<string, object>
-        {
-            { "StudId", studentId }
-        }));
-
-        await StDoc.UpdateAsync("Groups", FieldValue.ArrayRemove(new Dictionary<string, object>
-        {
-            { "GroupId", groupId }
-        }));
-
+        // Must match exactly how they were added — plain strings
+        await GrDoc.UpdateAsync("Students", FieldValue.ArrayRemove(studentId));
+        await StDoc.UpdateAsync("Groups", FieldValue.ArrayRemove(groupId));
     }
 }
