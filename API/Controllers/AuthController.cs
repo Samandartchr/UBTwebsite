@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using API.Application.UseCases.Users.Register;
 using API.Domain.Entities.User;
+using API.Application.Interfaces.Users.IUser;
 
 namespace API.Controllers.AuthController;
 
@@ -16,12 +17,15 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _dbContext;
     public readonly RegisterService _registerService;
     public readonly FirebaseAuth _firebaseAuth;
+    private readonly IUserReader _userReader;
 
-    public AuthController(AppDbContext dbContext, RegisterService registerService, FirebaseAuth firebaseAuth)
+
+    public AuthController(AppDbContext dbContext, RegisterService registerService, FirebaseAuth firebaseAuth, IUserReader userReader)
     {
         _dbContext = dbContext;
         _registerService = registerService;
         _firebaseAuth = firebaseAuth;
+        _userReader = userReader;
     }
 
     [HttpGet("checkuserexistence")]
@@ -79,6 +83,31 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while creating the user.", error = ex.Message });
+        }
+    }
+
+    [HttpGet("getuser")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<UserPublicInfo>> GetUser()
+    {
+        try
+        {
+            var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized(new { Message = "Authorization header is missing or invalid" });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+            string userId = await _userReader.GetIdAsync(token);
+            string Username = await _userReader.GetUsernameAsync(userId);
+            UserPublicInfo info = await _userReader.GetUserPublicInfoAsync(Username);
+            return info;
+        }
+
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while getting the user.", error = ex.Message });
         }
     }
 }

@@ -4,6 +4,7 @@ using API.Domain.Enums.UserRole;
 using API.Domain.Entities.User;
 using Google.Cloud.Firestore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace API.Infrastructure.Implementations.TeacherRepository;
 
@@ -61,13 +62,23 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
         var group = await _context.Groups.FirstOrDefaultAsync(g => g.GroupId == groupId && g.TeacherId == teacherId);
         if (group != null)
         {
+            if(await _context.GroupJoinOrders.AnyAsync(o => o.GroupId == groupId && o.SenderId == teacherId && o.AcceptorId == studentId))
+            {
+                throw new Exception("Invitation already sent");
+            }
+            if(await _context.GroupJoinOrders.AnyAsync(o => o.GroupId == groupId && o.SenderId == studentId && o.AcceptorId == teacherId))
+            {
+                throw new Exception("Student already sent invitation to teacher");
+            }
             var invitation = new GroupJoinOrder
             {
                 GroupId = groupId,
                 SenderId = teacherId,
                 AcceptorId = studentId
             };
-            _context.GroupJoinOrders.Add(invitation);
+            await _context.GroupJoinOrders.AddAsync(invitation);
+           // _context.Database.ExecuteSqlRaw(
+          //      "")
             await _context.SaveChangesAsync();
         }
     }
@@ -85,14 +96,8 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
         var GrDoc = _db.Collection("Groups").Document(groupId);
         var StDoc = _db.Collection("Students").Document(studentId);
 
-        await GrDoc.UpdateAsync("Students", FieldValue.ArrayUnion(new Dictionary<string, object>
-        {
-            { "StudId", studentId }
-        }));
-        await StDoc.UpdateAsync("Groups", FieldValue.ArrayUnion(new Dictionary<string, object>
-        {
-            { "GroupId", groupId }
-        }));
+        await GrDoc.UpdateAsync("Students", FieldValue.ArrayUnion(studentId));
+        await StDoc.UpdateAsync("Groups", FieldValue.ArrayUnion(groupId));
     }
 
     public async Task CreateGroup(Group group)
@@ -109,8 +114,7 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
             { "TeacherUsername", group.TeacherUsername },
             { "CreatedAt", group.CreatedAt },
             { "GroupDescription", group.GroupDescription },
-            { "GroupImageLink", group.GroupImageLink },
-            { "Students", new List<Dictionary<string, object>>() } // Initialize empty students array
+            { "GroupImageLink", group.GroupImageLink }
         });
     }
 
@@ -119,16 +123,8 @@ public class TeacherRepo: ITeacherReader, ITeacherWriter
         var GrDoc = _db.Collection("Groups").Document(groupId);
         var StDoc = _db.Collection("Students").Document(studentId);
 
-        //Remove an element of array in group document, the array is "Students", which contains Ids of students
-        await GrDoc.UpdateAsync("Students", FieldValue.ArrayRemove(new Dictionary<string, object>
-        {
-            { "StudId", studentId }
-        }));
-
-        await StDoc.UpdateAsync("Groups", FieldValue.ArrayRemove(new Dictionary<string, object>
-        {
-            { "GroupId", groupId }
-        }));
-
+        // Must match exactly how they were added — plain strings
+        await GrDoc.UpdateAsync("Students", FieldValue.ArrayRemove(studentId));
+        await StDoc.UpdateAsync("Groups", FieldValue.ArrayRemove(groupId));
     }
 }

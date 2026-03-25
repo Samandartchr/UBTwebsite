@@ -1,0 +1,156 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Domain\\Entities\\Test.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Domain\\Entities\\Test.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\GroupRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Infrastructure\\Implementations\\GroupRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\UserRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Infrastructure\\Implementations\\UserRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\TeacherRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Infrastructure\\Implementations\\TeacherRepo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\RemoveStudentController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Controllers\\RemoveStudentController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\PassTestController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Controllers\\PassTestController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Application\\UseCases\\Teachers\\RemoveStudent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Application\\UseCases\\Teachers\\RemoveStudent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\GroupController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:API\\Controllers\\GroupController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Test.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Domain\\Entities\\Test.cs",
+              "RelativeDocumentMoniker": "API\\Domain\\Entities\\Test.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Domain\\Entities\\Test.cs",
+              "RelativeToolTip": "API\\Domain\\Entities\\Test.cs",
+              "ViewState": "AgIAAGcAAAAAAAAAAAAuwHkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T20:00:33.043Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GroupRepo.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\GroupRepo.cs",
+              "RelativeDocumentMoniker": "API\\Infrastructure\\Implementations\\GroupRepo.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\GroupRepo.cs",
+              "RelativeToolTip": "API\\Infrastructure\\Implementations\\GroupRepo.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAuwGwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:58:11.149Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserRepo.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\UserRepo.cs",
+              "RelativeDocumentMoniker": "API\\Infrastructure\\Implementations\\UserRepo.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\UserRepo.cs",
+              "RelativeToolTip": "API\\Infrastructure\\Implementations\\UserRepo.cs",
+              "ViewState": "AgIAAHwAAAAAAAAAAAAuwI4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:58:01.767Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "TeacherRepo.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\TeacherRepo.cs",
+              "RelativeDocumentMoniker": "API\\Infrastructure\\Implementations\\TeacherRepo.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Infrastructure\\Implementations\\TeacherRepo.cs",
+              "RelativeToolTip": "API\\Infrastructure\\Implementations\\TeacherRepo.cs",
+              "ViewState": "AgIAAF8AAAAAAAAAAAAuwIEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:49:14.659Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PassTestController.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\PassTestController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\PassTestController.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\PassTestController.cs",
+              "RelativeToolTip": "API\\Controllers\\PassTestController.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAC0AAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:37:32.61Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RemoveStudentController.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\RemoveStudentController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\RemoveStudentController.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\RemoveStudentController.cs",
+              "RelativeToolTip": "API\\Controllers\\RemoveStudentController.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAuwEEAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:37:12.807Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "RemoveStudent.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Application\\UseCases\\Teachers\\RemoveStudent.cs",
+              "RelativeDocumentMoniker": "API\\Application\\UseCases\\Teachers\\RemoveStudent.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Application\\UseCases\\Teachers\\RemoveStudent.cs",
+              "RelativeToolTip": "API\\Application\\UseCases\\Teachers\\RemoveStudent.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAABMAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:22:39.146Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "GroupController.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\GroupController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\GroupController.cs",
+              "ToolTip": "C:\\Users\\Admin\\OneDrive\\Desktop\\\u0423\u043D\u0438\u0432\u0435\u0440\\UBTwebsite\\API\\Controllers\\GroupController.cs",
+              "RelativeToolTip": "API\\Controllers\\GroupController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-19T19:22:23.604Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
