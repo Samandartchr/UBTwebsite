@@ -25,38 +25,44 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add SQL Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+    builder.Configuration.GetConnectionString("DefaultConnection")
+));
 
-//Get service accounts
-var json = JsonConvert.SerializeObject(
-    builder.Configuration.GetSection("FirebaseProjectPrivateKey").GetChildren()
-    .ToDictionary(x => x.Key, x => x.Value)
-);
+// 1. Define the path
+var jsonPath = "secret.json";
 
-//Add Firebase
-var firebaseProjectId = builder.Configuration["FirebaseProjectPrivateKey:project_id"];
+// 2. Extract the Project ID manually from the JSON
+var jsonContent = File.ReadAllText(jsonPath);
+using var jsonDoc = JsonDocument.Parse(jsonContent);
+var firebaseProjectId = jsonDoc.RootElement.GetProperty("project_id").GetString();
+
+// 3. Create the credential object
+var cred = GoogleCredential.FromFile(jsonPath);
+
+// 4. Initialize Firebase
 if (FirebaseApp.DefaultInstance == null)
 {
     FirebaseApp.Create(new AppOptions()
     {
-        Credential = GoogleCredential.FromJson(json),
-        ProjectId = firebaseProjectId
+        Credential = cred,
+        ProjectId = firebaseProjectId 
     });
 }
 
-//Add Firestore
-var firestoreBuilder = new FirestoreClientBuilder
-{
-    Credential = GoogleCredential.FromJson(json)
-};
+// 5. Initialize Firestore
+var firestoreBuilder = new FirestoreClientBuilder { Credential = cred };
 var firestoreClient = firestoreBuilder.Build();
 
+builder.Services.AddSingleton(FirebaseAuth.DefaultInstance);
+// Use the extracted string here
+builder.Services.AddSingleton(_ => FirestoreDb.Create(firebaseProjectId, firestoreClient));
 //Singletons
 builder.Services.AddSingleton(FirebaseAuth.DefaultInstance);
 builder.Services.AddSingleton(_ => FirestoreDb.Create(firebaseProjectId, firestoreClient));
-
 builder.Services.AddControllers();
 /*builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -81,17 +87,12 @@ builder.Services.AddScoped<IGroupWriter, GroupRepo>();
 
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi();
 
 builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => 
-    p.WithOrigins("http://127.0.0.1:5500", 
-                  "http://localhost:5500", 
-                  "http://localhost:5550", 
-                  "http://localhost:8080",
-                  "http://10.110.239.243:8080")
+    p.AllowAnyOrigin()
      .AllowAnyHeader()
-     .AllowAnyMethod()
-     .AllowCredentials()));  // Important for Authorization headers
+     .AllowAnyMethod()));  // Important for Authorization headers
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -108,6 +109,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 //-------------------------------
 var app = builder.Build();
 //-------------------------------
@@ -119,14 +123,15 @@ var app = builder.Build();
 
 app.UseDeveloperExceptionPage();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
-
+app.MapGet("/ping", () => "ok");
 app.MapControllers();
+
 
 app.Run();

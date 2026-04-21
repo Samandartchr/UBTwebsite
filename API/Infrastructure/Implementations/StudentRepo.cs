@@ -707,135 +707,154 @@ public class StudentCalculator: IStudentCalculator
             }
         };
     }
-    public async Task<TestResult> CalculateTestResultAsync(string studentId,
-                                        TestAnswers studentAnswers,
-                                        TestAnswers testAnswers,
-                                        Subject SecondarySubject1,
-                                        Subject SecondarySubject2)
+    public async Task<TestResult> CalculateTestResultAsync(
+    string studentId,
+    TestAnswers studentAnswers,
+    TestAnswers testAnswers,
+    Subject SecondarySubject1,
+    Subject SecondarySubject2)
+{
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    static int ScoreSingleChoiceMatrix(bool[,] student, bool[,] correct)
     {
-        int kazakhHistoryScore = 20;
-        for (int i = 0; i < testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers.GetLength(0); i++)
-            for (int j = 0; j < testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers.GetLength(1); j++)
-                if (studentAnswers.KazakhHistoryAnswers.SingleChoiceAnswers[i, j] != testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers[i, j])
-                    kazakhHistoryScore--;
-
-        for (int i = 0; i < testAnswers.KazakhHistoryAnswers.ContextAnswers.Count; i++)
-            for (int j = 0; j < testAnswers.KazakhHistoryAnswers.ContextAnswers[i].GetLength(0); j++)
-                for (int k = 0; k < testAnswers.KazakhHistoryAnswers.ContextAnswers[i].GetLength(1); k++)
-                    if (studentAnswers.KazakhHistoryAnswers.ContextAnswers[i][j, k] != testAnswers.KazakhHistoryAnswers.ContextAnswers[i][j, k])
-                        kazakhHistoryScore--;
-
-        int functionalScore = 10;
-        for (int i = 0; i < testAnswers.FunctionalLiteracyAnswers.ContextAnswers.Count; i++)
-            for (int j = 0; j < testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i].GetLength(0); j++)
-                for (int k = 0; k < testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i].GetLength(1); k++)
-                    if (studentAnswers.FunctionalLiteracyAnswers.ContextAnswers[i][j, k] != testAnswers.FunctionalLiteracyAnswers.ContextAnswers[i][j, k])
-                        functionalScore--;
-
-        int mathLitScore = 10;
-        for (int i = 0; i < testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers.GetLength(0); i++)
-            for (int j = 0; j < testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers.GetLength(1); j++)
-                if (studentAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers[i, j] != testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers[i, j])
-                    mathLitScore--;
-
-        int sec1Score = 50;
-        for (int i = 0; i < testAnswers.SecondarySubject1Answers.SingleChoiceAnswers.GetLength(0); i++)
-            for (int j = 0; j < testAnswers.SecondarySubject1Answers.SingleChoiceAnswers.GetLength(1); j++)
-                if (studentAnswers.SecondarySubject1Answers.SingleChoiceAnswers[i, j] != testAnswers.SecondarySubject1Answers.SingleChoiceAnswers[i, j])
-                    sec1Score--;
-
-        for (int i = 0; i < testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers.GetLength(0); i++)
+        int deductions = 0;
+        for (int i = 0; i < correct.GetLength(0); i++)
         {
-            int mismatches = 0;
-            int correctCount = 0;
-            bool studentFoundCorrect = false;
-
-            for (int j = 0; j < testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers.GetLength(1); j++)
+            for (int j = 0; j < correct.GetLength(1); j++)
             {
-                bool isCorrect = testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j];
-                bool studentSelected = studentAnswers.SecondarySubject1Answers.MultipleChoiceAnswers[i, j];
-
-                if (isCorrect) correctCount++;
-                if (isCorrect && studentSelected) studentFoundCorrect = true;
-                if (isCorrect != studentSelected) mismatches++;
+                if (student[i, j] != correct[i, j])
+                {
+                    deductions++;
+                    break; // one deduction per question row, not per bit
+                }
             }
-
-            if (mismatches == 0) continue;
-
-            if (correctCount == 1 && !studentFoundCorrect)
-                sec1Score -= 2;
-            else if (mismatches == 1)
-                sec1Score -= 1;
-            else
-                sec1Score -= 2;
         }
-
-        for (int j = 0; j < testAnswers.SecondarySubject1Answers.ContextAnswers.GetLength(0); j++)
-            for (int k = 0; k < testAnswers.SecondarySubject1Answers.ContextAnswers.GetLength(1); k++)
-                if (studentAnswers.SecondarySubject1Answers.ContextAnswers[j, k] != testAnswers.SecondarySubject1Answers.ContextAnswers[j, k])
-                    sec1Score--;
-
-        for (int i = 0; i < testAnswers.SecondarySubject1Answers.MatchAnswers.Count; i++)
-            for (int j = 0; j < testAnswers.SecondarySubject1Answers.MatchAnswers[i].GetLength(0); j++)
-                for (int k = 0; k < testAnswers.SecondarySubject1Answers.MatchAnswers[i].GetLength(1); k++)
-                    if (studentAnswers.SecondarySubject1Answers.MatchAnswers[i][j, k] != testAnswers.SecondarySubject1Answers.MatchAnswers[i][j, k])
-                        sec1Score--;
-
-        int sec2Score = 50;
-        for (int i = 0; i < testAnswers.SecondarySubject2Answers.SingleChoiceAnswers.GetLength(0); i++)
-            for (int j = 0; j < testAnswers.SecondarySubject2Answers.SingleChoiceAnswers.GetLength(1); j++)
-                if (studentAnswers.SecondarySubject2Answers.SingleChoiceAnswers[i, j] != testAnswers.SecondarySubject2Answers.SingleChoiceAnswers[i, j])
-                    sec2Score--;
-
-        for (int i = 0; i < testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers.GetLength(0); i++)
-        {
-            int mismatches = 0;
-            int correctCount = 0;
-            bool studentFoundCorrect = false;
-
-            for (int j = 0; j < testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers.GetLength(1); j++)
-            {
-                bool isCorrect = testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j];
-                bool studentSelected = studentAnswers.SecondarySubject2Answers.MultipleChoiceAnswers[i, j];
-
-                if (isCorrect) correctCount++;
-                if (isCorrect && studentSelected) studentFoundCorrect = true;
-                if (isCorrect != studentSelected) mismatches++;
-            }
-
-            if (mismatches == 0) continue;
-
-            if (correctCount == 1 && !studentFoundCorrect)
-                sec2Score -= 2;
-            else if (mismatches == 1)
-                sec2Score -= 1;
-            else
-                sec2Score -= 2;
-        }
-
-        for (int j = 0; j < testAnswers.SecondarySubject2Answers.ContextAnswers.GetLength(0); j++)
-            for (int k = 0; k < testAnswers.SecondarySubject2Answers.ContextAnswers.GetLength(1); k++)
-                if (studentAnswers.SecondarySubject2Answers.ContextAnswers[j, k] != testAnswers.SecondarySubject2Answers.ContextAnswers[j, k])
-                    sec2Score--;
-
-        for (int i = 0; i < testAnswers.SecondarySubject2Answers.MatchAnswers.Count; i++)
-            for (int j = 0; j < testAnswers.SecondarySubject2Answers.MatchAnswers[i].GetLength(0); j++)
-                for (int k = 0; k < testAnswers.SecondarySubject2Answers.MatchAnswers[i].GetLength(1); k++)
-                    if (studentAnswers.SecondarySubject2Answers.MatchAnswers[i][j, k] != testAnswers.SecondarySubject2Answers.MatchAnswers[i][j, k])
-                        sec2Score--;
-
-        return new TestResult
-        {
-            StudentId = studentId,
-            TakenAt = DateTime.UtcNow,
-            KazakhHistoryScore = kazakhHistoryScore,
-            FunctionalLiteracyScore = functionalScore,
-            MathematicalLiteracyScore = mathLitScore,
-            SecondarySubject1 = SecondarySubject1,
-            SecondarySubject1Score = sec1Score,
-            SecondarySubject2 = SecondarySubject2,
-            SecondarySubject2Score = sec2Score,
-            TotalScore = kazakhHistoryScore + functionalScore + mathLitScore + sec1Score + sec2Score
-        };
+        return deductions;
     }
+
+    static int ScoreContextList(List<bool[,]> student, List<bool[,]> correct)
+    {
+        int deductions = 0;
+        for (int i = 0; i < correct.Count; i++)
+            deductions += ScoreSingleChoiceMatrix(student[i], correct[i]);
+        return deductions;
+    }
+
+    static int ScoreMatchList(List<bool[,]> student, List<bool[,]> correct)
+    {
+        int deductions = 0;
+        for (int i = 0; i < correct.Count; i++)
+        {
+            // One deduction per left-item row that has any mismatch
+            for (int j = 0; j < correct[i].GetLength(0); j++)
+            {
+                for (int k = 0; k < correct[i].GetLength(1); k++)
+                {
+                    if (student[i][j, k] != correct[i][j, k])
+                    {
+                        deductions++;
+                        break;
+                    }
+                }
+            }
+        }
+        return deductions;
+    }
+
+    static int ScoreMultipleChoice(bool[,] student, bool[,] correct)
+    {
+        int deductions = 0;
+        for (int i = 0; i < correct.GetLength(0); i++)
+        {
+            int mismatches = 0, correctCount = 0;
+            bool studentFoundCorrect = false;
+
+            for (int j = 0; j < correct.GetLength(1); j++)
+            {
+                bool isCorrect = correct[i, j];
+                bool selected  = student[i, j];
+                if (isCorrect) correctCount++;
+                if (isCorrect && selected) studentFoundCorrect = true;
+                if (isCorrect != selected) mismatches++;
+            }
+
+            if (mismatches == 0) continue;
+            if (correctCount == 1 && !studentFoundCorrect) deductions += 2;
+            else if (mismatches == 1)                      deductions += 1;
+            else                                           deductions += 2;
+        }
+        return deductions;
+    }
+
+    // ── Scoring ───────────────────────────────────────────────────────────────
+
+    int kazakhHistoryScore = 20
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.KazakhHistoryAnswers.SingleChoiceAnswers,
+            testAnswers.KazakhHistoryAnswers.SingleChoiceAnswers)
+        - ScoreContextList(
+            studentAnswers.KazakhHistoryAnswers.ContextAnswers,
+            testAnswers.KazakhHistoryAnswers.ContextAnswers);
+
+    int functionalScore = 10
+        - ScoreContextList(
+            studentAnswers.FunctionalLiteracyAnswers.ContextAnswers,
+            testAnswers.FunctionalLiteracyAnswers.ContextAnswers);
+
+    int mathLitScore = 10
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers,
+            testAnswers.MathematicalLiteracyAnswers.SingleChoiceAnswers);
+
+    int sec1Score = 50
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.SecondarySubject1Answers.SingleChoiceAnswers,
+            testAnswers.SecondarySubject1Answers.SingleChoiceAnswers)
+        - ScoreMultipleChoice(
+            studentAnswers.SecondarySubject1Answers.MultipleChoiceAnswers,
+            testAnswers.SecondarySubject1Answers.MultipleChoiceAnswers)
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.SecondarySubject1Answers.ContextAnswers,
+            testAnswers.SecondarySubject1Answers.ContextAnswers)
+        - ScoreMatchList(
+            studentAnswers.SecondarySubject1Answers.MatchAnswers,
+            testAnswers.SecondarySubject1Answers.MatchAnswers);
+
+    int sec2Score = 50
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.SecondarySubject2Answers.SingleChoiceAnswers,
+            testAnswers.SecondarySubject2Answers.SingleChoiceAnswers)
+        - ScoreMultipleChoice(
+            studentAnswers.SecondarySubject2Answers.MultipleChoiceAnswers,
+            testAnswers.SecondarySubject2Answers.MultipleChoiceAnswers)
+        - ScoreSingleChoiceMatrix(
+            studentAnswers.SecondarySubject2Answers.ContextAnswers,
+            testAnswers.SecondarySubject2Answers.ContextAnswers)
+        - ScoreMatchList(
+            studentAnswers.SecondarySubject2Answers.MatchAnswers,
+            testAnswers.SecondarySubject2Answers.MatchAnswers);
+
+    // ── Clamp & return ────────────────────────────────────────────────────────
+
+    kazakhHistoryScore = Math.Max(0, kazakhHistoryScore);
+    functionalScore    = Math.Max(0, functionalScore);
+    mathLitScore       = Math.Max(0, mathLitScore);
+    sec1Score          = Math.Max(0, sec1Score);
+    sec2Score          = Math.Max(0, sec2Score);
+
+    return new TestResult
+    {
+        StudentId                 = studentId,
+        TakenAt                   = DateTime.UtcNow,
+        KazakhHistoryScore        = kazakhHistoryScore,
+        FunctionalLiteracyScore   = functionalScore,
+        MathematicalLiteracyScore = mathLitScore,
+        SecondarySubject1         = SecondarySubject1,
+        SecondarySubject1Score    = sec1Score,
+        SecondarySubject2         = SecondarySubject2,
+        SecondarySubject2Score    = sec2Score,
+        TotalScore                = kazakhHistoryScore + functionalScore + mathLitScore + sec1Score + sec2Score
+    };
+}
 }

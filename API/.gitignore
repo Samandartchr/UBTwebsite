@@ -61,6 +61,7 @@ dlldata.c
 BenchmarkDotNet.Artifacts/
 
 # .NET
+secret.json
 appsettings.json
 appsettings.Development.json
 project.lock.json
